@@ -22,6 +22,14 @@ import logging
 import nbt
 import textures
 import world
+import cPickle
+
+import sys
+import zlib
+
+sys.path.append("../python-gearman")
+
+from gearman.client import GearmanClient
 
 """
 This module has routines related to rendering one particular chunk into an
@@ -468,6 +476,10 @@ class ChunkRenderer(object):
         For cave mode, all blocks that have any direct sunlight are not
         rendered, and blocks are drawn with a color tint depending on their
         depth."""
+
+        c = GearmanClient(["localhost"])
+        important_data = dict()
+
         blocks = self.blocks
         
         if cave:
@@ -490,6 +502,8 @@ class ChunkRenderer(object):
         tileEntities = get_tileentity_data(self.level)
 
 
+
+
         # Each block is 24x24
         # The next block on the X axis adds 12px to x and subtracts 6px from y in the image
         # The next block on the Y axis adds 12px to x and adds 6px to y in the image
@@ -500,147 +514,27 @@ class ChunkRenderer(object):
         if not img:
             img = Image.new("RGBA", (384, 1728), (38,92,255,0))
 
-        for x,y,z,imgx,imgy in iterate_chunkblocks(xoff,yoff):
-            blockid = blocks[x,y,z]
+        important_data['tileEntities'] = tileEntities
+        important_data['blocks'] = blocks
+        important_data['blockData_expanded'] = blockData_expanded
+        important_data['cave'] = cave
+        important_data['xoff'] = xoff
+        important_data['yoff'] = yoff
 
-            # the following blocks don't have textures that can be pre-computed from the blockid
-            # alone.  additional data is required.
-            # TODO torches, redstone torches, crops, ladders, stairs, 
-            #      levers, doors, buttons, and signs all need to be handled here (and in textures.py)
+        # holy cow remote rendering
+        result = c.submit_job("go_render", zlib.compress(cPickle.dumps(important_data)))
+       
+        #print result
+        #print result.state
+        #print result.exception
+        #print dir(result)
 
-            ## minecart track, crops, ladder, doors, etc.
-            if blockid in textures.special_blocks:
-             # also handle furnaces here, since one side has a different texture than the other
-                ancilData = blockData_expanded[x,y,z]
-                try:
-                    t = textures.specialblockmap[(blockid, ancilData)]
-                except KeyError:
-                    t = None
+        #print type(result.result)
 
-            else:
-                t = textures.blockmap[blockid]
+        raw = zlib.decompress(result.result)
 
-            if not t:
-                continue
-
-            # Check if this block is occluded
-            if cave and (
-                    x == 0 and y != 15 and z != 127
-            ):
-                # If it's on the x face, only render if there's a
-                # transparent block in the y+1 direction OR the z-1
-                # direction
-                if (
-                    blocks[x,y+1,z] not in transparent_blocks and
-                    blocks[x,y,z+1] not in transparent_blocks
-                ):
-                    continue
-            elif cave and (
-                    y == 15 and x != 0 and z != 127
-            ):
-                # If it's on the facing y face, only render if there's
-                # a transparent block in the x-1 direction OR the z-1
-                # direction
-                if (
-                    blocks[x-1,y,z] not in transparent_blocks and
-                    blocks[x,y,z+1] not in transparent_blocks
-                ):
-                    continue
-            elif cave and (
-                    y == 15 and x == 0 and z != 127
-            ):
-                # If it's on the facing edge, only render if what's
-                # above it is transparent
-                if (
-                    blocks[x,y,z+1] not in transparent_blocks
-                ):
-                    continue
-            elif (
-                    # Normal block or not cave mode, check sides for
-                    # transparentcy or render unconditionally if it's
-                    # on a shown face
-                    x != 0 and y != 15 and z != 127 and
-                    blocks[x-1,y,z] not in transparent_blocks and
-                    blocks[x,y+1,z] not in transparent_blocks and
-                    blocks[x,y,z+1] not in transparent_blocks
-            ):
-                # Don't render if all sides aren't transparent and
-                # we're not on the edge
-                continue
-
-            # Draw the actual block on the image. For cave images,
-            # tint the block with a color proportional to its depth
-            if cave:
-                # no lighting for cave -- depth is probably more useful
-                img.paste(Image.blend(t[0],depth_colors[z],0.3), (imgx, imgy), t[1])
-            else:
-                if not self.world.lighting:
-                    # no lighting at all
-                    img.paste(t[0], (imgx, imgy), t[1])
-                elif blockid in transparent_blocks:
-                    # transparent means draw the whole
-                    # block shaded with the current
-                    # block's light
-                    black_coeff, _ = self.get_lighting_coefficient(x, y, z)
-                    img.paste(Image.blend(t[0], black_color, black_coeff), (imgx, imgy), t[1])
-                else:
-                    # draw each face lit appropriately,
-                    # but first just draw the block
-                    img.paste(t[0], (imgx, imgy), t[1])
-                    
-                    # top face
-                    black_coeff, face_occlude = self.get_lighting_coefficient(x, y, z + 1)
-                    if not face_occlude:
-                        img.paste((0,0,0), (imgx, imgy), ImageEnhance.Brightness(facemasks[0]).enhance(black_coeff))
-                    
-                    # left face
-                    black_coeff, face_occlude = self.get_lighting_coefficient(x - 1, y, z)
-                    if not face_occlude:
-                        img.paste((0,0,0), (imgx, imgy), ImageEnhance.Brightness(facemasks[1]).enhance(black_coeff))
-
-                    # right face
-                    black_coeff, face_occlude = self.get_lighting_coefficient(x, y + 1, z)
-                    if not face_occlude:
-                        img.paste((0,0,0), (imgx, imgy), ImageEnhance.Brightness(facemasks[2]).enhance(black_coeff))
-
-            # Draw edge lines
-            if blockid in (44,): # step block
-               increment = 6
-            elif blockid in (78,): # snow
-               increment = 9
-            else:
-               increment = 0
-
-            if blockid not in transparent_blocks or blockid in (78,): #special case snow so the outline is still drawn
-                draw = ImageDraw.Draw(img)
-                if x != 15 and blocks[x+1,y,z] == 0:
-                    draw.line(((imgx+12,imgy+increment), (imgx+22,imgy+5+increment)), fill=(0,0,0), width=1)
-                if y != 0 and blocks[x,y-1,z] == 0:
-                    draw.line(((imgx,imgy+6+increment), (imgx+12,imgy+increment)), fill=(0,0,0), width=1)
-
-
-        for entity in tileEntities:
-            if entity['id'] == 'Sign':
-
-                # convert the blockID coordinates from local chunk
-                # coordinates to global world coordinates
-                newPOI = dict(type="sign",
-                                x= entity['x'],
-                                y= entity['z'],
-                                z= entity['y'],
-                                msg="%s\n%s\n%s\n%s" %
-                                   (entity['Text1'], entity['Text2'], entity['Text3'], entity['Text4']),
-                                chunk= (self.chunkX, self.chunkY),
-                               )
-                self.queue.put(["newpoi", newPOI])
-
-
-        # check to see if there are any signs in the persistentData list that are from this chunk.
-        # if so, remove them from the persistentData list (since they're have been added to the world.POI
-        # list above.
-        self.queue.put(['removePOI', (self.chunkX, self.chunkY)])
-
-            
+        img = Image.fromstring("RGBA",(384, 1728),raw)
+        
 
         return img
 
