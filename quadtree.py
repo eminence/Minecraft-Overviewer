@@ -30,6 +30,7 @@ import cPickle
 from PIL import Image
 
 from optimizeimages import optimize_image
+import composite
 
 
 """
@@ -124,19 +125,20 @@ class QuadtreeGen(object):
                 complete, total, level, self.p))
 
     def write_html(self, skipjs=False):
-        """Writes out index.html, marker.js, and region.js"""
+        """Writes out config.js, marker.js, and region.js
+        Copies web assets into the destdir"""
         zoomlevel = self.p
         imgformat = self.imgformat
-        templatepath = os.path.join(util.get_program_path(), "template.html")
+        configpath = os.path.join(util.get_program_path(), "config.js")
 
-        html = open(templatepath, 'r').read()
-        html = html.replace(
+        config = open(configpath, 'r').read()
+        config = config.replace(
                 "{maxzoom}", str(zoomlevel))
-        html = html.replace(
+        config = config.replace(
                 "{imgformat}", str(imgformat))
                 
-        with open(os.path.join(self.destdir, "index.html"), 'w') as output:
-            output.write(html)
+        with open(os.path.join(self.destdir, "config.js"), 'w') as output:
+            output.write(config)
 
         # Write a blank image
         blank = Image.new("RGBA", (1,1))
@@ -144,6 +146,10 @@ class QuadtreeGen(object):
         if not os.path.exists(tileDir): os.mkdir(tileDir)
         blank.save(os.path.join(tileDir, "blank."+self.imgformat))
 
+        # copy web assets into destdir:
+        for root, dirs, files in os.walk(os.path.join(util.get_program_path(), "web_assets")):
+            for f in files:
+                shutil.copy(os.path.join(root, f), self.destdir)
 
         if skipjs:
             return
@@ -176,11 +182,11 @@ class QuadtreeGen(object):
         
     def _get_cur_depth(self):
         """How deep is the quadtree currently in the destdir? This glances in
-        index.html to see what maxZoom is set to.
+        config.js to see what maxZoom is set to.
         returns -1 if it couldn't be detected, file not found, or nothing in
-        index.html matched
+        config.js matched
         """
-        indexfile = os.path.join(self.destdir, "index.html")
+        indexfile = os.path.join(self.destdir, "config.js")
         if not os.path.exists(indexfile):
             return -1
         matcher = re.compile(r"maxZoom:\s*(\d+)")
@@ -463,7 +469,10 @@ def render_innertile(dest, name, imgformat, optimizeimg):
 
     # Create the actual image now
     img = Image.new("RGBA", (384, 384), (38,92,255,0))
-
+    
+    # we'll use paste (NOT alpha_over) for quadtree generation because
+    # this is just straight image stitching, not alpha blending
+    
     if q0path:
         try:
             quad0 = Image.open(q0path).resize((192,192), Image.ANTIALIAS)
@@ -627,7 +636,7 @@ def render_worldtile(chunks, colstart, colend, rowstart, rowend, path, imgformat
         xpos = -192 + (col-colstart)*192
         ypos = -96 + (row-rowstart)*96
 
-        tileimg.paste(chunkimg.convert("RGB"), (xpos, ypos), chunkimg)
+        composite.alpha_over(tileimg, chunkimg.convert("RGB"), (xpos, ypos), chunkimg)
 
     # Save them
     tileimg.save(imgpath)

@@ -21,11 +21,13 @@ import Queue
 import sys
 import logging
 import cPickle
+import collections
 
 import numpy
 
 import chunk
 import nbt
+import textures
 
 """
 This module has routines related to generating all the chunks for a world
@@ -34,6 +36,7 @@ and for extracting information about available worlds
 """
 
 base36decode = functools.partial(int, base=36)
+cached = collections.defaultdict(dict)
 
 
 def _convert_coords(chunks):
@@ -84,6 +87,12 @@ def base36encode(number, alphabet='0123456789abcdefghijklmnopqrstuvwxyz'):
         return "-" + base36
     return base36
 
+class FakeAsyncResult:
+    def __init__(self, string):
+        self.string = string
+    def get(self):
+        return self.string
+
 class WorldRenderer(object):
     """Renders a world's worth of chunks.
     worlddir is the path to the minecraft world
@@ -94,14 +103,33 @@ class WorldRenderer(object):
     files to update. If it includes a trailing newline, it is stripped, so you
     can pass in file handles just fine.
     """
-    def __init__(self, worlddir, cachedir, chunklist=None, lighting=False, night=False):
+    def __init__(self, worlddir, cachedir, chunklist=None, lighting=False, night=False, spawn=False, useBiomeData=False):
         self.worlddir = worlddir
         self.caves = False
-        self.lighting = lighting or night
-        self.night = night
+        self.lighting = lighting or night or spawn
+        self.night = night or spawn
+        self.spawn = spawn
         self.cachedir = cachedir
+        self.useBiomeData = useBiomeData
+
+        if self.useBiomeData:
+            textures.prepareBiomeData(worlddir)
 
         self.chunklist = chunklist
+
+        # In order to avoid having to look up the cache file names in
+        # ChunkRenderer, get them all and store them here
+        for root, dirnames, filenames in os.walk(cachedir):
+            for filename in filenames:
+                if not filename.endswith('.png') or not filename.startswith("img."):
+                    continue
+                dirname, dir_b = os.path.split(root)
+                _, dir_a = os.path.split(dirname)
+                _, x, z, cave, _ = filename.split('.', 4)
+                dir = '/'.join((dir_a, dir_b))
+                bits = '.'.join((x, z, cave))
+                cached[dir][bits] = os.path.join(root, filename)
+
 
         #  stores Points Of Interest to be mapped with markers
         #  a list of dictionaries, see below for an example
@@ -268,13 +296,17 @@ class WorldRenderer(object):
             for i, (col, row, chunkfile) in enumerate(chunks):
                 if inclusion_set and (col, row) not in inclusion_set:
                     # Skip rendering, just find where the existing image is
-                    _, imgpath = chunk.ChunkRenderer(chunkfile,
-                            self.cachedir, self).find_oldimage(False)
+                    _, imgpath = chunk.find_oldimage(chunkfile, cached, self.caves)
                     if imgpath:
                         results[(col, row)] = imgpath
                         continue
 
-                result = chunk.render_and_save(chunkfile, self.cachedir, self, cave=self.caves, queue=q)
+                oldimg = chunk.find_oldimage(chunkfile, cached, self.caves)
+                if chunk.check_cache(chunkfile, oldimg):
+                    result = oldimg[1]
+                else:
+                    result = chunk.render_and_save(chunkfile, self.cachedir, self, oldimg, queue=q)
+
                 results[(col, row)] = result
                 if i > 0:
                     try:
@@ -294,15 +326,18 @@ class WorldRenderer(object):
             for col, row, chunkfile in chunks:
                 if inclusion_set and (col, row) not in inclusion_set:
                     # Skip rendering, just find where the existing image is
-                    _, imgpath = chunk.ChunkRenderer(chunkfile,
-                            self.cachedir, self).find_oldimage(False)
+                    _, imgpath = chunk.find_oldimage(chunkfile, cached, self.caves)
                     if imgpath:
                         results[(col, row)] = imgpath
                         continue
 
-                result = pool.apply_async(chunk.render_and_save,
-                        args=(chunkfile,self.cachedir,self),
-                        kwds=dict(cave=self.caves, queue=q))
+                oldimg = chunk.find_oldimage(chunkfile, cached, self.caves)
+                if chunk.check_cache(chunkfile, oldimg):
+                    result = FakeAsyncResult(oldimg[1])
+                else:
+                    result = pool.apply_async(chunk.render_and_save,
+                            args=(chunkfile,self.cachedir,self, oldimg),
+                            kwds=dict(cave=self.caves, queue=q))
                 asyncresults.append((col, row, result))
 
             pool.close()
@@ -359,7 +394,9 @@ def get_worlds():
     for dir in os.listdir(save_dir):
         if dir.startswith("World") and len(dir) == 6:
             world_n = int(dir[-1])
-            info = nbt.load(os.path.join(save_dir, dir, "level.dat"))[1]
+            world_dat = os.path.join(save_dir, dir, "level.dat")
+            if not os.path.exists(world_dat): continue
+            info = nbt.load(world_dat)[1]
             info['Data']['path'] = os.path.join(save_dir, dir)
             ret[world_n] = info['Data']
 

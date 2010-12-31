@@ -14,10 +14,12 @@
 #    with the Overviewer.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy
-from PIL import Image, ImageDraw, ImageEnhance
+from PIL import Image, ImageDraw, ImageEnhance, ImageOps
 import os.path
 import hashlib
 import logging
+import time
+import math
 
 import nbt
 import textures
@@ -30,6 +32,7 @@ import zlib
 sys.path.append("../python-gearman")
 
 from gearman.client import GearmanClient
+import composite
 
 """
 This module has routines related to rendering one particular chunk into an
@@ -44,7 +47,11 @@ image
 # of the dest image will have its alpha channel modified. To prevent this:
 # first use im.split() and take the third item which is the alpha channel and
 # use that as the mask. Then take the image and use im.convert("RGB") to strip
-# the image from its alpha channel, and use that as the source to paste()
+# the image from its alpha channel, and use that as the source to alpha_over()
+
+# (note that this workaround is NOT technically needed when using the
+# alpha_over extension, BUT this extension may fall back to PIL's
+# paste(), which DOES need the workaround.)
 
 def get_lvldata(filename):
     """Takes a filename and returns the Level struct, which contains all the
@@ -113,12 +120,50 @@ def iterate_chunkblocks(xoff,yoff):
 transparent_blocks = set([0, 6, 8, 9, 18, 20, 37, 38, 39, 40, 44, 50, 51, 52, 53,
     59, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 74, 75, 76, 77, 78, 79, 81, 83, 85])
 
-def render_and_save(chunkfile, cachedir, worldobj, cave=False, queue=None):
+# This set holds block ids that are solid blocks
+solid_blocks = set([1, 2, 3, 4, 5, 7, 12, 13, 14, 15, 16, 17, 18, 19, 20, 35,
+    41, 42, 43, 44, 45, 46, 47, 48, 49, 53, 54, 56, 57, 58, 60, 61, 62, 64, 65,
+    66, 67, 71, 73, 74, 78, 79, 80, 81, 82, 84, 86, 87, 88, 89, 91])
+
+# This set holds block ids that are fluid blocks
+fluid_blocks = set([8,9,10,11])
+
+# This set holds block ids that are not candidates for spawning mobs on
+# (glass, half blocks)
+nospawn_blocks = set([20,44])
+
+def find_oldimage(chunkfile, cached, cave):
+    destdir, filename = os.path.split(chunkfile)
+    filename_split = filename.split(".")
+    blockid = ".".join(filename_split[1:3])
+
+    # Get the name of the existing image.
+    moredirs, dir2 = os.path.split(destdir)
+    dir1 = os.path.basename(moredirs)
+    cachename = '/'.join((dir1, dir2))
+
+    oldimg = oldimg_path = None
+    key = ".".join((blockid, "cave" if cave else "nocave"))
+    if key in cached[cachename]:
+         oldimg_path = cached[cachename][key]
+         _, oldimg = os.path.split(oldimg_path)
+         logging.debug("Found cached image {0}".format(oldimg))
+    return oldimg, oldimg_path
+
+def check_cache(chunkfile, oldimg):
+    try:
+        if oldimg[1] and os.path.getmtime(chunkfile) <= os.path.getmtime(oldimg[1]):
+            return True
+        return False
+    except OSError:
+        return False
+
+def render_and_save(chunkfile, cachedir, worldobj, oldimg, cave=False, queue=None):
     """Used as the entry point for the multiprocessing workers (since processes
     can't target bound methods) or to easily render and save one chunk
     
     Returns the image file location"""
-    a = ChunkRenderer(chunkfile, cachedir, worldobj, queue)
+    a = ChunkRenderer(chunkfile, cachedir, worldobj, oldimg, queue)
     try:
         return a.render_and_save(cave)
     except ChunkCorrupt:
@@ -141,7 +186,7 @@ class ChunkCorrupt(Exception):
     pass
 
 class ChunkRenderer(object):
-    def __init__(self, chunkfile, cachedir, worldobj, queue):
+    def __init__(self, chunkfile, cachedir, worldobj, oldimg, queue):
         """Make a new chunk renderer for the given chunkfile.
         chunkfile should be a full path to the .dat file to process
         cachedir is a directory to save the resulting chunk images to
@@ -170,6 +215,13 @@ class ChunkRenderer(object):
         moredirs, dir2 = os.path.split(destdir)
         _, dir1 = os.path.split(moredirs)
         self.cachedir = os.path.join(cachedir, dir1, dir2)
+        self.oldimg, self.oldimg_path = oldimg
+
+
+        if self.world.useBiomeData:
+            if not textures.grasscolor or not textures.foliagecolor:
+                raise Exception("Can't find grasscolor.png or foliagecolor.png")
+
 
         if not os.path.exists(self.cachedir):
             try:
@@ -279,6 +331,180 @@ class ChunkRenderer(object):
         return self._right_blocklight
     right_blocklight = property(_load_right_blocklight)
 
+    def _load_up_right(self):
+        """Loads and sets data from upper-right chunk"""
+        chunk_path = self.world.get_chunk_path(self.coords[0] + 1, self.coords[1])
+        try:
+            chunk_data = get_lvldata(chunk_path)
+            self._up_right_skylight = get_skylight_array(chunk_data)
+            self._up_right_blocklight = get_blocklight_array(chunk_data)
+            self._up_right_blocks = get_blockarray(chunk_data)
+        except IOError:
+            self._up_right_skylight = None
+            self._up_right_blocklight = None
+            self._up_right_blocks = None
+    
+    def _load_up_right_blocks(self):
+        """Loads and returns upper-right block array"""
+        if not hasattr(self, "_up_right_blocks"):
+            self._load_up_right()
+        return self._up_right_blocks
+    up_right_blocks = property(_load_up_right_blocks)
+    
+    def _load_up_left(self):
+        """Loads and sets data from upper-left chunk"""
+        chunk_path = self.world.get_chunk_path(self.coords[0], self.coords[1] - 1)
+        try:
+            chunk_data = get_lvldata(chunk_path)
+            self._up_left_skylight = get_skylight_array(chunk_data)
+            self._up_left_blocklight = get_blocklight_array(chunk_data)
+            self._up_left_blocks = get_blockarray(chunk_data)
+        except IOError:
+            self._up_left_skylight = None
+            self._up_left_blocklight = None
+            self._up_left_blocks = None
+    
+    def _load_up_left_blocks(self):
+        """Loads and returns lower-left block array"""
+        if not hasattr(self, "_up_left_blocks"):
+            self._load_up_left()
+        return self._up_left_blocks
+    up_left_blocks = property(_load_up_left_blocks)
+
+    def generate_pseudo_ancildata(self,x,y,z,blockid):
+        """ Generates a pseudo ancillary data for blocks that depend of 
+        what are surrounded and don't have ancillary data"""
+        
+        blocks = self.blocks
+        up_left_blocks = self.up_left_blocks 
+        up_right_blocks = self.up_right_blocks
+        left_blocks = self.left_blocks
+        right_blocks = self.right_blocks
+        
+        if ( # The block is surrounded by 0 blocks with same blockid
+        (up_right_blocks[0,y,z] != blockid if x == 15 else blocks[x+1,y,z] != blockid) and 
+        (left_blocks[15,y,z] != blockid if x == 0 else blocks[x - 1,y,z] != blockid) and
+        (right_blocks[x,0,z] != blockid if y == 15 else blocks[x,y + 1,z] != blockid) and
+        (up_left_blocks[x,15,z] != blockid if y == 0 else blocks[x,y - 1,z] != blockid) 
+        ): return 1
+
+        # Now 3 in line, they should be more common:
+        
+        elif ( # The block is surrounded by 2 blocks with same blockid, along x axis
+        (up_right_blocks[0,y,z] == blockid if x == 15 else blocks[x+1,y,z] == blockid) and 
+        (left_blocks[15,y,z] == blockid if x == 0 else blocks[x - 1,y,z] == blockid) and
+        (right_blocks[x,0,z] != blockid if y == 15 else blocks[x,y + 1,z] != blockid) and
+        (up_left_blocks[x,15,z] != blockid if y == 0 else blocks[x,y - 1,z] != blockid)
+        ): return 2
+
+        elif ( # The block is surrounded by 2 blocks with same blockid, along y axis
+        (up_right_blocks[0,y,z] != blockid if x == 15 else blocks[x+1,y,z] != blockid) and 
+        (left_blocks[15,y,z] != blockid if x == 0 else blocks[x - 1,y,z] != blockid) and
+        (right_blocks[x,0,z] == blockid if y == 15 else blocks[x,y + 1,z] == blockid) and
+        (up_left_blocks[x,15,z] == blockid if y == 0 else blocks[x,y - 1,z] == blockid)
+        ): return 3
+        
+        # Now 3 in corner:
+        
+        elif ( # The block is surrounded by 2 blocks with same blockid, in a -y to x corner
+        (up_right_blocks[0,y,z] == blockid if x == 15 else blocks[x+1,y,z] == blockid) and 
+        (left_blocks[15,y,z] != blockid if x == 0 else blocks[x - 1,y,z] != blockid) and
+        (right_blocks[x,0,z] != blockid if y == 15 else blocks[x,y + 1,z] != blockid) and
+        (up_left_blocks[x,15,z] == blockid if y == 0 else blocks[x,y - 1,z] == blockid)
+        ): return 4
+
+        elif ( # The block is surrounded by 2 blocks with same blockid, in a -y to -x corner
+        (up_right_blocks[0,y,z] != blockid if x == 15 else blocks[x+1,y,z] != blockid) and 
+        (left_blocks[15,y,z] == blockid if x == 0 else blocks[x - 1,y,z] == blockid) and
+        (right_blocks[x,0,z] != blockid if y == 15 else blocks[x,y + 1,z] != blockid) and
+        (up_left_blocks[x,15,z] == blockid if y == 0 else blocks[x,y - 1,z] == blockid)
+        ): return 5
+        
+        elif ( # The block is surrounded by 2 blocks with same blockid, in a y to -x corner
+        (up_right_blocks[0,y,z] != blockid if x == 15 else blocks[x+1,y,z] != blockid) and 
+        (left_blocks[15,y,z] == blockid if x == 0 else blocks[x - 1,y,z] == blockid) and
+        (right_blocks[x,0,z] == blockid if y == 15 else blocks[x,y + 1,z] == blockid) and
+        (up_left_blocks[x,15,z] != blockid if y == 0 else blocks[x,y - 1,z] != blockid)
+        ): return 6
+        
+        elif ( # The block is surrounded by 2 blocks with same blockid, in a y to x corner
+        (up_right_blocks[0,y,z] == blockid if x == 15 else blocks[x+1,y,z] == blockid) and 
+        (left_blocks[15,y,z] != blockid if x == 0 else blocks[x - 1,y,z] != blockid) and
+        (right_blocks[x,0,z] == blockid if y == 15 else blocks[x,y + 1,z] == blockid) and
+        (up_left_blocks[x,15,z] != blockid if y == 0 else blocks[x,y - 1,z] != blockid)
+        ): return 7
+    
+        # Now 1 in dead end:
+
+        elif ( # The block is surrounded by 1 blocks with same blockid, in +x
+        (up_right_blocks[0,y,z] == blockid if x == 15 else blocks[x+1,y,z] == blockid) and 
+        (left_blocks[15,y,z] != blockid if x == 0 else blocks[x - 1,y,z] != blockid) and
+        (right_blocks[x,0,z] != blockid if y == 15 else blocks[x,y + 1,z] != blockid) and
+        (up_left_blocks[x,15,z] != blockid if y == 0 else blocks[x,y - 1,z] != blockid)
+        ): return 8
+
+        elif ( # The block is surrounded by 1 blocks with same blockid, in -y
+        (up_right_blocks[0,y,z] != blockid if x == 15 else blocks[x+1,y,z] != blockid) and 
+        (left_blocks[15,y,z] != blockid if x == 0 else blocks[x - 1,y,z] != blockid) and
+        (right_blocks[x,0,z] != blockid if y == 15 else blocks[x,y + 1,z] != blockid) and
+        (up_left_blocks[x,15,z] == blockid if y == 0 else blocks[x,y - 1,z] == blockid)
+        ): return 9
+        
+        elif ( # The block is surrounded by 1 blocks with same blockid, in -x
+        (up_right_blocks[0,y,z] != blockid if x == 15 else blocks[x+1,y,z] != blockid) and 
+        (left_blocks[15,y,z] == blockid if x == 0 else blocks[x - 1,y,z] == blockid) and
+        (right_blocks[x,0,z] != blockid if y == 15 else blocks[x,y + 1,z] != blockid) and
+        (up_left_blocks[x,15,z] != blockid if y == 0 else blocks[x,y - 1,z] != blockid)
+        ): return 10
+        
+        elif ( # The block is surrounded by 1 blocks with same blockid, in +y
+        (up_right_blocks[0,y,z] != blockid if x == 15 else blocks[x+1,y,z] != blockid) and 
+        (left_blocks[15,y,z] != blockid if x == 0 else blocks[x - 1,y,z] != blockid) and
+        (right_blocks[x,0,z] == blockid if y == 15 else blocks[x,y + 1,z] == blockid) and
+        (up_left_blocks[x,15,z] != blockid if y == 0 else blocks[x,y - 1,z] != blockid)
+        ): return 11
+
+        # Now surrounded by 3 identical blocks:
+
+        elif ( # The block is surrounded by 3 blocks with same blockid, in postiions -x, -y, +x
+        (up_right_blocks[0,y,z] == blockid if x == 15 else blocks[x+1,y,z] == blockid) and 
+        (left_blocks[15,y,z] == blockid if x == 0 else blocks[x - 1,y,z] == blockid) and
+        (right_blocks[x,0,z] != blockid if y == 15 else blocks[x,y + 1,z] != blockid) and
+        (up_left_blocks[x,15,z] == blockid if y == 0 else blocks[x,y - 1,z] == blockid)
+        ): return 12
+        
+        elif ( # The block is surrounded by 3 blocks with same blockid, in postiions +y, -y, -x
+        (up_right_blocks[0,y,z] != blockid if x == 15 else blocks[x+1,y,z] != blockid) and 
+        (left_blocks[15,y,z] == blockid if x == 0 else blocks[x - 1,y,z] == blockid) and
+        (right_blocks[x,0,z] == blockid if y == 15 else blocks[x,y + 1,z] == blockid) and
+        (up_left_blocks[x,15,z] == blockid if y == 0 else blocks[x,y - 1,z] == blockid)
+        ): return 13
+        
+        elif ( # The block is surrounded by 3 blocks with same blockid, in postiions -x, +y, +x
+        (up_right_blocks[0,y,z] == blockid if x == 15 else blocks[x+1,y,z] == blockid) and 
+        (left_blocks[15,y,z] == blockid if x == 0 else blocks[x - 1,y,z] == blockid) and
+        (right_blocks[x,0,z] == blockid if y == 15 else blocks[x,y + 1,z] == blockid) and
+        (up_left_blocks[x,15,z] != blockid if y == 0 else blocks[x,y - 1,z] != blockid)
+        ): return 14
+        
+        elif ( # The block is surrounded by 3 blocks with same blockid, in postiions +y, -y, +x
+        (up_right_blocks[0,y,z] == blockid if x == 15 else blocks[x+1,y,z] == blockid) and 
+        (left_blocks[15,y,z] != blockid if x == 0 else blocks[x - 1,y,z] != blockid) and
+        (right_blocks[x,0,z] == blockid if y == 15 else blocks[x,y + 1,z] == blockid) and
+        (up_left_blocks[x,15,z] == blockid if y == 0 else blocks[x,y - 1,z] == blockid)
+        ): return 15
+
+        # Block completely sourrounded by 4 blocks:
+
+        elif ( # The block is surrounded completely
+        (up_right_blocks[0,y,z] == blockid if x == 15 else blocks[x+1,y,z] == blockid) and 
+        (left_blocks[15,y,z] == blockid if x == 0 else blocks[x - 1,y,z] == blockid) and
+        (right_blocks[x,0,z] == blockid if y == 15 else blocks[x,y + 1,z] == blockid) and
+        (up_left_blocks[x,15,z] == blockid if y == 0 else blocks[x,y - 1,z] == blockid)
+        ): return 16
+        
+        else: return None
+
     def _hash_blockarray(self):
         """Finds a hash of the block array"""
         if hasattr(self, "_digest"):
@@ -295,36 +521,12 @@ class ChunkRenderer(object):
         self._digest = digest[:6]
         return self._digest
 
-    def find_oldimage(self, cave):
-        # Get the name of the existing image. No way to do this but to look at
-        # all the files
-        oldimg = oldimg_path = None
-        for filename in os.listdir(self.cachedir):
-            if filename.startswith("img.{0}.{1}.".format(self.blockid,
-                    "cave" if cave else "nocave")) and \
-                    filename.endswith(".png"):
-                oldimg = filename
-                oldimg_path = os.path.join(self.cachedir, oldimg)
-                break
-        return oldimg, oldimg_path
-
     def render_and_save(self, cave=False):
         """Render the chunk using chunk_render, and then save it to a file in
         the same directory as the source image. If the file already exists and
         is up to date, this method doesn't render anything.
         """
         blockid = self.blockid
-        
-        oldimg, oldimg_path = self.find_oldimage(cave)
-
-        if oldimg:
-            # An image exists? Instead of checking the hash which is kinda
-            # expensive (for tens of thousands of chunks, yes it is) check if
-            # the mtime of the chunk file is newer than the mtime of oldimg
-            if os.path.getmtime(self.chunkfile) <= os.path.getmtime(oldimg_path):
-                # chunkfile is older than the image, don't even bother checking
-                # the hash
-                return oldimg_path
 
         # Reasons for the code to get to this point:
         # 1) An old image doesn't exist
@@ -342,18 +544,19 @@ class ChunkRenderer(object):
 
         dest_path = os.path.join(self.cachedir, dest_filename)
 
-        if oldimg:
-            if dest_filename == oldimg:
+        if self.oldimg:
+            if dest_filename == self.oldimg:
                 # There is an existing file, the chunk has a newer mtime, but the
                 # hashes match.
                 # Before we return it, update its mtime so the next round
                 # doesn't have to check the hash
                 os.utime(dest_path, None)
+                logging.debug("Using cached image")
                 return dest_path
             else:
                 # Remove old image for this chunk. Anything already existing is
                 # either corrupt or out of date
-                os.unlink(oldimg_path)
+                os.unlink(self.oldimg_path)
 
         # Render the chunk
         img = self.chunk_render(cave=cave)
@@ -481,6 +684,10 @@ class ChunkRenderer(object):
         important_data = dict()
 
         blocks = self.blocks
+        pseudo_ancildata_blocks = set([85])
+        
+        left_blocks = self.left_blocks
+        right_blocks = self.right_blocks
         
         if cave:
             # Cave mode. Actually go through and 0 out all blocks that are not in a
@@ -501,6 +708,12 @@ class ChunkRenderer(object):
 
         tileEntities = get_tileentity_data(self.level)
 
+        if self.world.useBiomeData:
+            biomeColorData = textures.getBiomeData(self.world.worlddir,
+                self.chunkX, self.chunkY)
+        # in the 8x8 block of biome data, what chunk is this?l
+        startX = (self.chunkX - int(math.floor(self.chunkX/8)*8))
+        startY = (self.chunkY - int(math.floor(self.chunkY/8)*8))
 
 
 
@@ -520,6 +733,7 @@ class ChunkRenderer(object):
         important_data['cave'] = cave
         important_data['xoff'] = xoff
         important_data['yoff'] = yoff
+
 
         # holy cow remote rendering
         result = c.submit_job("go_render", zlib.compress(cPickle.dumps(important_data)))
@@ -550,6 +764,8 @@ def generate_facemasks():
     toppart = textures.transform_image(white)
     leftpart = textures.transform_image_side(white)
     
+    # using the real PIL paste here (not alpha_over) because there is
+    # no alpha channel (and it's mode "L")
     top.paste(toppart, (0,0))
     left.paste(leftpart, (0,6))
     right = left.transpose(Image.FLIP_LEFT_RIGHT)
@@ -564,6 +780,7 @@ def generate_facemasks():
     return (top, left, right)
 facemasks = generate_facemasks()
 black_color = Image.new("RGB", (24,24), (0,0,0))
+red_color = Image.new("RGB", (24,24), (229,36,38))
 
 # Render 128 different color images for color coded depth blending in cave mode
 def generate_depthcolors():

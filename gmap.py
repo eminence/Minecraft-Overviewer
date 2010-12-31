@@ -16,8 +16,8 @@
 #    with the Overviewer.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-if sys.version_info[0] != 2 and sys.version_info[1] < 6:
-    print "Sorry, the Overviewer requires at least Python 2.6 to run"
+if not (sys.version_info[0] == 2 and sys.version_info[1] >= 6):
+    print "Sorry, the Overviewer requires at least Python 2.6 to run"  # Python3.0 is not supported either
     sys.exit(1)
 
 import os
@@ -27,6 +27,7 @@ import re
 import multiprocessing
 import time
 import logging
+import optimizeimages
 
 logging.basicConfig(level=logging.INFO,format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -50,6 +51,7 @@ def main():
     parser.add_option("--chunklist", dest="chunklist", help="A file containing, on each line, a path to a chunkfile to update. Instead of scanning the world directory for chunks, it will just use this list. Normal caching rules still apply.")
     parser.add_option("--lighting", dest="lighting", help="Renders shadows using light data from each chunk.", action="store_true")
     parser.add_option("--night", dest="night", help="Renders shadows using light data from each chunk, as if it were night. Implies --lighting.", action="store_true")
+    parser.add_option("--spawn", dest="spawn", help="Renders shadows using light data from each chunk, as if it were night, while also highlighting areas that are dark enough to spawn mobs. Implies --lighting and --night.", action="store_true")
     parser.add_option("--imgformat", dest="imgformat", help="The image output format to use. Currently supported: png(default), jpg. NOTE: png will always be used as the intermediate image format.")
     parser.add_option("--optimize-img", dest="optimizeimg", help="If using png, perform image file size optimizations on the output. Specify 1 for pngcrush, 2 for pngcrush+optipng+advdef. This may double (or more) render times, but will produce up to 30% smaller images. NOTE: requires corresponding programs in $PATH or %PATH%")
     parser.add_option("-q", "--quiet", dest="quiet", action="count", default=0, help="Print less output. You can specify this option multiple times.")
@@ -103,7 +105,8 @@ def main():
         imgformat = 'png'
 
     if options.optimizeimg:
-        optimizeimg = options.optimizeimg
+        optimizeimg = int(options.optimizeimg)
+        optimizeimages.check_programs(optimizeimg)
     else:
         optimizeimg = None
 
@@ -115,8 +118,14 @@ def main():
     logging.info("Welcome to Minecraft Overviewer!")
     logging.debug("Current log level: {0}".format(logging.getLogger().level))
 
+    
+    useBiomeData = os.path.exists(os.path.join(worlddir, 'EXTRACTEDBIOMES'))
+    if not useBiomeData:
+        logging.info("Notice: Not using biome data for tinting")
+
     # First generate the world's chunk images
-    w = world.WorldRenderer(worlddir, cachedir, chunklist=chunklist, lighting=options.lighting, night=options.night)
+    w = world.WorldRenderer(worlddir, cachedir, chunklist=chunklist, lighting=options.lighting, night=options.night, spawn=options.spawn, useBiomeData=useBiomeData)
+
     w.go(options.procs)
 
     # Now generate the tiles
@@ -144,6 +153,12 @@ def delete_all(worlddir, tiledir):
                     filepath = os.path.join(dirpath, f)
                     logging.info("Deleting {0}".format(filepath))
                     os.unlink(filepath)
+
+    # delete the overviewer.dat persistant data file
+    datfile = os.path.join(worlddir,"overviewer.dat")
+    if os.path.exists(datfile):
+        os.unlink(datfile)
+        logging.info("Deleting {0}".format(datfile))
 
 def list_worlds():
     "Prints out a brief summary of saves found in the default directory"
