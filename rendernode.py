@@ -30,7 +30,10 @@ import cPickle
 import stat
 import errno 
 import time
+import sys
 from time import gmtime, strftime, sleep
+
+import consoleDriver
 
 
 """
@@ -110,6 +113,11 @@ class RenderNode(object):
         
         self.last_status = 0
 
+        self.con_driv = consoleDriver.getDriver()
+
+        ## get terminal size
+        (self.term_cols, self.term_rows) = self.con_driv.get_term_size()
+
     def print_statusbar(self):
         self.last_status = time.time()
         sys.stdout.write("\r[")
@@ -120,8 +128,8 @@ class RenderNode(object):
         #print "current_complete:  ", self.current_levelcomplete
         percent = (previous_complete + self.current_levelcomplete) / float(self.big_total)
         #print percent
-        bars = int(percent * 80)
-        right = 80-bars
+        bars = int(percent * (self.term_cols - 4))
+        right = self.term_cols-bars - 4
         sys.stdout.write("=" * bars)
         sys.stdout.write("." * right)
         sys.stdout.write("]")
@@ -177,6 +185,10 @@ class RenderNode(object):
             if q.p > max_p:
                 max_p = q.p
         self.max_p = max_p
+
+        # calculate the big total, for every layer
+        self.big_total = sum(map(lambda x: int(total/pow(4,x)), range(max_p)))
+        self.bottom_total = total
         # Render the highest level of tiles from the chunks
         results = collections.deque()
         complete = 0
@@ -186,6 +198,9 @@ class RenderNode(object):
         logging.info("There are {0} total levels to render".format(self.max_p))
         logging.info("Don't worry, each level has only 25% as many tiles as the last.")
         logging.info("The others will go faster")
+
+        logging.info("Across all layers, there are %d total tiles", self.big_total)
+
         count = 0
         batch_size = 4*len(quadtrees)
         while batch_size < 10:
@@ -215,18 +230,18 @@ class RenderNode(object):
                     while count_to_remove > 0:
                         count_to_remove -= 1
                         complete += results.popleft().get()
-                        self.print_statusline(complete, total, 1)  
+                        self.update_status(complete=complete, total=total, level=1)  
             if len(results) > (10000//batch_size):
                 # Empty the queue before adding any more, so that memory
                 # required has an upper bound
                 while len(results) > (500//batch_size):
                     complete += results.popleft().get()
-                    self.print_statusline(complete, total, 1)
+                    self.update_status(complete=complete, total=total, level=1)
 
         # Wait for the rest of the results
         while len(results) > 0:
             complete += results.popleft().get()
-            self.print_statusline(complete, total, 1)
+            self.update_status(complete=complete, total=total, level=1)
         for world in self.worlds:    
             try:
                 while (1):
@@ -241,7 +256,7 @@ class RenderNode(object):
             except Queue.Empty:
                 pass
 
-        self.print_statusline(complete, total, 1, True)
+        self.update_status(complete=complete, total=total, level=1)
 
         # Now do the other layers
         for zoom in xrange(self.max_p-1, 0, -1):
@@ -265,17 +280,17 @@ class RenderNode(object):
                         while count_to_remove > 0:
                             count_to_remove -= 1
                             complete += results.popleft().get()
-                            self.print_statusline(complete, total, level)
+                            self.update_status(complete=complete, total=total, level=level)
                 if len(results) > (10000/batch_size):
                     while len(results) > (500/batch_size):
                         complete += results.popleft().get()
-                        self.print_statusline(complete, total, level)
+                        self.update_status(complete=complete, total=total, level=level)
             # Empty the queue
             while len(results) > 0:
                 complete += results.popleft().get()
-                self.print_statusline(complete, total, level)
+                self.update_status(complete=complete, total=total, level=level)
 
-            self.print_statusline(complete, total, level, True)
+            self.update_status(complete=complete, total=total, level=level)
 
             logging.info("Done")
 
