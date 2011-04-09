@@ -107,7 +107,34 @@ class RenderNode(object):
         #stash into the world object like we stash an index into the quadtree
         for world in self.worlds:
             world.poi_q = manager.Queue() 
+        
+        self.last_status = 0
 
+    def print_statusbar(self):
+        self.last_status = time.time()
+        sys.stdout.write("\r[")
+        previous_complete = sum(map(lambda x: self.bottom_total/pow(4,x), range(self.current_level - 1)))
+        #print "bottom_total:      ", self.bottom_total
+        #print "current_level:     ", self.current_level
+        #print "previous_complete: ", previous_complete
+        #print "current_complete:  ", self.current_levelcomplete
+        percent = (previous_complete + self.current_levelcomplete) / float(self.big_total)
+        #print percent
+        bars = int(percent * 80)
+        right = 80-bars
+        sys.stdout.write("=" * bars)
+        sys.stdout.write("." * right)
+        sys.stdout.write("]")
+        sys.stdout.flush()
+        ##print "cats"
+        #print 
+
+    def update_status(self, level, complete, total):
+        self.current_level = level
+        self.current_levelcomplete = complete
+        self.current_leveltotal = total
+        if (time.time() - self.last_status) > 1:
+            self.print_statusbar()
 
     def print_statusline(self, complete, total, level, unconditional=False):
         if unconditional:
