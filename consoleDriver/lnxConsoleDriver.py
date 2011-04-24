@@ -56,4 +56,6 @@ class lnxConsoleDriver:
                 cr = (25, 80)
         # reverse rows, cols
         return int(cr[1]), int(cr[0])
-        
+       
+    def set_cursor_position(self, x=1, y=1):
+        sys.stdout.write("\x1b[%d;%dH")

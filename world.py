@@ -21,6 +21,7 @@ import multiprocessing
 import Queue
 import sys
 import logging
+import logger
 import cPickle
 import collections
 import itertools
@@ -72,10 +73,11 @@ class World(object):
     def __init__(self, worlddir, useBiomeData=False,regionlist=None):
         self.worlddir = worlddir
         self.useBiomeData = useBiomeData
+        self.logger = logger.getLogger()
                 
         #find region files, or load the region list
         #this also caches all the region file header info
-        logging.info("Scanning regions")
+        self.logger.info("Scanning regions")
         regionfiles = {}
         self.regions = {}
         for x, y, regionfile in self._iterate_regionfiles():  
@@ -89,14 +91,14 @@ class World(object):
         self.chunklimit = 1024 
         self.chunkcount = 0
         self.empty_chunk = [None,None]
-        logging.debug("Done scanning regions")
+        self.logger.debug("Done scanning regions")
         
         # figure out chunk format is in use
         # if not mcregion, error out early
         data = nbt.load(os.path.join(self.worlddir, "level.dat"))[1]['Data']
         #print data
         if not ('version' in data and data['version'] == 19132):
-            logging.error("Sorry, This version of Minecraft-Overviewer only works with the new McRegion chunk format")
+            self.logger.error("Sorry, This version of Minecraft-Overviewer only works with the new McRegion chunk format")
             sys.exit(1)
 
         if self.useBiomeData:
@@ -234,7 +236,7 @@ class World(object):
         self.{min,max}{col,row} for use later in quadtree.py. This
         also does other world-level processing."""
         
-        logging.info("Scanning chunks")
+        self.logger.info("Scanning chunks")
         # find the dimensions of the map, in region files
         minx = maxx = miny = maxy = 0
         found_regions = False
@@ -245,9 +247,9 @@ class World(object):
             miny = min(miny, y)
             maxy = max(maxy, y)
         if not found_regions:
-            logging.error("Error: No chunks found!")
+            self.logger.error("Error: No chunks found!")
             sys.exit(1)
-        logging.debug("Done scanning chunks")
+        self.logger.debug("Done scanning chunks")
         
         # turn our region coordinates into chunk coordinates
         minx = minx * 32

@@ -33,7 +33,8 @@ import time
 import sys
 from time import gmtime, strftime, sleep
 
-import consoleDriver
+#import consoleDriver
+import logger
 
 
 """
@@ -49,7 +50,7 @@ def catch_keyboardinterrupt(func):
         try:
             return func(*args, **kwargs)
         except KeyboardInterrupt:
-            logging.error("Ctrl-C caught!")
+            self.logger.error("Ctrl-C caught!")
             raise Exception("Exiting")
         except:
             import traceback
@@ -59,7 +60,7 @@ def catch_keyboardinterrupt(func):
     
 child_rendernode = None
 def pool_initializer(rendernode):
-    logging.debug("Child process {0}".format(os.getpid()))
+    logger.getLogger().debug("Child process {0}".format(os.getpid()))
     #stash the quadtree objects in a global variable after fork() for windows compat.
     global child_rendernode
     child_rendernode = rendernode  
@@ -90,6 +91,8 @@ class RenderNode(object):
     def __init__(self, quadtrees):
         """Distributes the rendering of a list of quadtrees."""
 
+        self.logger = logger.getLogger()
+
         if not len(quadtrees) > 0:
             raise ValueError("there must be at least one quadtree to work on")    
 
@@ -111,38 +114,16 @@ class RenderNode(object):
         for world in self.worlds:
             world.poi_q = manager.Queue() 
         
-        self.last_status = 0
 
-        self.con_driv = consoleDriver.getDriver()
+        #self.con_driv = consoleDriver.getDriver()
 
         ## get terminal size
-        (self.term_cols, self.term_rows) = self.con_driv.get_term_size()
+        #(self.term_cols, self.term_rows) = self.con_driv.get_term_size()
 
-    def print_statusbar(self):
-        self.last_status = time.time()
-        sys.stdout.write("\r[")
-        previous_complete = sum(map(lambda x: self.bottom_total/pow(4,x), range(self.current_level - 1)))
-        #print "bottom_total:      ", self.bottom_total
-        #print "current_level:     ", self.current_level
-        #print "previous_complete: ", previous_complete
-        #print "current_complete:  ", self.current_levelcomplete
-        percent = (previous_complete + self.current_levelcomplete) / float(self.big_total)
-        #print percent
-        bars = int(percent * (self.term_cols - 4))
-        right = self.term_cols-bars - 4
-        sys.stdout.write("=" * bars)
-        sys.stdout.write("." * right)
-        sys.stdout.write("]")
-        sys.stdout.flush()
-        ##print "cats"
-        #print 
 
-    def update_status(self, level, complete, total):
-        self.current_level = level
-        self.current_levelcomplete = complete
-        self.current_leveltotal = total
-        if (time.time() - self.last_status) > 1:
-            self.print_statusbar()
+    def update_status(self, level, complete, total, force=False):
+        #self.logger.warning("updating status: %f", time.time())
+        self.logger.update_status(level, complete, total, force)
 
     def print_statusline(self, complete, total, level, unconditional=False):
         if unconditional:
@@ -156,13 +137,13 @@ class RenderNode(object):
         else:
             if not complete % 1000 == 0:
                 return
-        logging.info("{0}/{1} tiles complete on level {2}/{3}".format(
+        self.logger.info("{0}/{1} tiles complete on level {2}/{3}".format(
                 complete, total, level, self.max_p))
                 
     def go(self, procs):
         """Renders all tiles"""
         
-        logging.debug("Parent process {0}".format(os.getpid()))
+        self.logger.debug("Parent process {0}".format(os.getpid()))
         # Create a pool
         if procs == 1:
             pool = FakePool()
@@ -187,19 +168,21 @@ class RenderNode(object):
         self.max_p = max_p
 
         # calculate the big total, for every layer
-        self.big_total = sum(map(lambda x: int(total/pow(4,x)), range(max_p)))
-        self.bottom_total = total
+        self.logger.big_total = sum(map(lambda x: int(total/pow(4,x)), range(max_p)))
+        self.logger.bottom_total = total
+        self.logger.total_levels = max_p
+
         # Render the highest level of tiles from the chunks
         results = collections.deque()
         complete = 0
-        logging.info("Rendering highest zoom level of tiles now.")
-        logging.info("Rendering {0} layer{1}".format(len(quadtrees),'s' if len(quadtrees) > 1 else '' ))
-        logging.info("There are {0} tiles to render".format(total))        
-        logging.info("There are {0} total levels to render".format(self.max_p))
-        logging.info("Don't worry, each level has only 25% as many tiles as the last.")
-        logging.info("The others will go faster")
+        self.logger.info("Rendering highest zoom level of tiles now.")
+        self.logger.info("Rendering {0} layer{1}".format(len(quadtrees),'s' if len(quadtrees) > 1 else '' ))
+        self.logger.info("There are {0} tiles to render".format(total))        
+        self.logger.info("There are {0} total levels to render".format(self.max_p))
+        self.logger.info("Don't worry, each level has only 25%% as many tiles as the last.")
+        self.logger.info("The others will go faster")
 
-        logging.info("Across all layers, there are %d total tiles", self.big_total)
+        self.logger.info("Across all layers, there are %d total tiles", self.logger.big_total)
 
         count = 0
         batch_size = 4*len(quadtrees)
@@ -256,7 +239,7 @@ class RenderNode(object):
             except Queue.Empty:
                 pass
 
-        self.update_status(complete=complete, total=total, level=1)
+        self.update_status(complete=complete, total=total, level=1, force=True)
 
         # Now do the other layers
         for zoom in xrange(self.max_p-1, 0, -1):
@@ -267,7 +250,9 @@ class RenderNode(object):
             for q in quadtrees:
                 if zoom <= q.p:
                     total += 4**zoom
-            logging.info("Starting level {0}".format(level))
+            self.logger.info("Starting level {0}".format(level))
+            self.update_status(complete=0, total=total, level=level, force=True)
+
             timestamp = time.time()
             for result in self._apply_render_inntertile(pool, zoom,batch_size):
                 results.append(result)
@@ -290,9 +275,9 @@ class RenderNode(object):
                 complete += results.popleft().get()
                 self.update_status(complete=complete, total=total, level=level)
 
-            self.update_status(complete=complete, total=total, level=level)
+            self.update_status(complete=complete, total=total, level=level, force=True)
 
-            logging.info("Done")
+            self.logger.info("Done")
 
         pool.close()
         pool.join()

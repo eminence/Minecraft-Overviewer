@@ -17,6 +17,7 @@ import numpy
 from PIL import Image, ImageDraw, ImageEnhance, ImageOps
 import os.path
 import logging
+import logger
 import time
 import math
 import sys
@@ -64,7 +65,7 @@ def get_lvldata(world, filename, x, y, retries=2):
             world.reload_region(filename)
             return get_lvldata(world, filename, x, y, retries=retries-1)
         else:
-            logging.warning("Error opening chunk (%i, %i) in %s. It may be corrupt. %s", x, y, filename, e)
+            self.logger.warning("Error opening chunk (%i, %i) in %s. It may be corrupt. %s", x, y, filename, e)
             raise ChunkCorrupt(str(e))
     
     if not d: raise NoSuchChunk(x,y)
@@ -144,6 +145,8 @@ class ChunkRenderer(object):
         cachedir is a directory to save the resulting chunk images to
         """
         self.queue = queue
+
+        self.logger = logger.getLogger()
         
         self.regionfile = worldobj.get_region_path(*chunkcoords)    
         #if not os.path.exists(self.regionfile):
@@ -172,7 +175,7 @@ class ChunkRenderer(object):
             try:
                 self._level = get_lvldata(self.world,self.regionfile, self.chunkX, self.chunkY)
             except NoSuchChunk, e:
-                logging.debug("Skipping non-existant chunk")
+                self.logger.debug("Skipping non-existant chunk")
                 raise
         return self._level
     level = property(_load_level)

@@ -73,6 +73,7 @@ import world
 import quadtree
 import googlemap
 import rendernode
+import logger
 
 helptext = """
 %prog [OPTIONS] <World # / Name / Path to World> <tiles dest dir>
@@ -81,6 +82,26 @@ helptext = """
 
 
 def main():
+    ###try:
+    ###    l = logger.getLogger()
+    ###    for x in range(40):
+    ###        l.info("testing %d %s", x, "testing")
+    ###        l.warning("testing %d" % x)
+    ###        l.debug("testing %d" % x)
+    ###        l.error("testing %d" % x)
+    ###        time.sleep(0.2)
+
+    ###    #l.info("testing2")
+    ###    time.sleep(3)
+
+    ###    sys.exit(0)
+    ###except:
+    ###    import traceback
+    ###    f = open("/tmp/tb.txt", "w")
+    ###    traceback.print_exc(file=f)
+    ###    f.close()
+    ###    sys.exit(0)
+
     try:
         cpus = multiprocessing.cpu_count()
     except NotImplementedError:
@@ -108,6 +129,7 @@ def main():
 
     options, args = parser.parse_args()
 
+    
 
     if options.version:
         print "Minecraft-Overviewer"
@@ -202,48 +224,60 @@ def main():
     logging.getLogger().setLevel(
         logging.getLogger().level - 10*options.verbose)
 
-    logging.info("Welcome to Minecraft Overviewer!")
-    logging.debug("Current log level: {0}".format(logging.getLogger().level))
+    l = logger.getLogger()
+
+    l.info("Welcome to Minecraft Overviewer!")
+    l.debug("Current log level: {0}".format(logging.getLogger().level))
    
     useBiomeData = os.path.exists(os.path.join(worlddir, 'biomes'))
     if not useBiomeData:
-        logging.info("Notice: Not using biome data for tinting")
+        l.info("Notice: Not using biome data for tinting")
     
     # First do world-level preprocessing
     w = world.World(worlddir, useBiomeData=useBiomeData)
     w.go(options.procs)
 
-    logging.info("Rending the following tilesets: %s", ",".join(options.rendermode))
+    l.info("Rending the following tilesets: %s", ",".join(options.rendermode))
 
     bgcolor = (int(options.bg_color[1:3],16), int(options.bg_color[3:5],16), int(options.bg_color[5:7],16), 0)
 
     # create the quadtrees
     # TODO chunklist
-    q = []
-    qtree_args = {'depth' : options.zoom, 'imgformat' : imgformat, 'optimizeimg' : optimizeimg, 'bgcolor':bgcolor}
-    for rendermode in options.rendermode:
-        if rendermode == 'normal':
-            qtree = quadtree.QuadtreeGen(w, destdir, rendermode=rendermode, tiledir='tiles', **qtree_args)
-        else:
-            qtree = quadtree.QuadtreeGen(w, destdir, rendermode=rendermode, **qtree_args)
-        q.append(qtree)
-    
-    # do quadtree-level preprocessing
-    for qtree in q:
-        qtree.go(options.procs)
 
-    # create the distributed render
-    r = rendernode.RenderNode(q)
-    
-    # write out the map and web assets
-    m = googlemap.MapGen(q, configInfo=options)
-    m.go(options.procs)
-    
-    # render the tiles!
-    r.go(options.procs)
+    try:
+        q = []
+        qtree_args = {'depth' : options.zoom, 'imgformat' : imgformat, 'optimizeimg' : optimizeimg, 'bgcolor':bgcolor}
+        for rendermode in options.rendermode:
+            if rendermode == 'normal':
+                qtree = quadtree.QuadtreeGen(w, destdir, rendermode=rendermode, tiledir='tiles', **qtree_args)
+            else:
+                qtree = quadtree.QuadtreeGen(w, destdir, rendermode=rendermode, **qtree_args)
+            q.append(qtree)
+        
+        # do quadtree-level preprocessing
+        for qtree in q:
+            qtree.go(options.procs)
 
-    # finish up the map
-    m.finalize()
+        # create the distributed render
+        r = rendernode.RenderNode(q)
+        
+        # write out the map and web assets
+        m = googlemap.MapGen(q, configInfo=options)
+        m.go(options.procs)
+        
+        # render the tiles!
+        r.go(options.procs)
+
+        # finish up the map
+        m.finalize()
+    except:
+        import traceback
+        f = open("/tmp/tb.txt", "w")
+        traceback.print_exc(file=f)
+        f.close()
+    finally:
+        l.finish()
+
 
 
 def delete_all(worlddir, tiledir):

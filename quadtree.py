@@ -23,6 +23,7 @@ import shutil
 import collections
 import json
 import logging
+import logger
 import util
 import cPickle
 import stat
@@ -63,6 +64,12 @@ class QuadtreeGen(object):
         self.imgformat = imgformat
         self.optimizeimg = optimizeimg
         self.bgcolor = bgcolor
+
+        self.logger = logger.getLogger()
+        
+        self.lighting = rendermode in ("lighting", "night", "spawn")
+        self.night = rendermode in ("night", "spawn")
+        self.spawn = rendermode in ("spawn",)
         self.rendermode = rendermode
         
         # force png renderformat if we're using an overlay mode
@@ -190,12 +197,12 @@ class QuadtreeGen(object):
         curdepth = self._get_cur_depth()
         if curdepth != -1:
             if self.p > curdepth:
-                logging.warning("Your map seemes to have expanded beyond its previous bounds.")
-                logging.warning( "Doing some tile re-arrangements... just a sec...")
+                self.logger.warning("Your map seemes to have expanded beyond its previous bounds.")
+                self.logger.warning( "Doing some tile re-arrangements... just a sec...")
                 for _ in xrange(self.p-curdepth):
                     self._increase_depth()
             elif self.p < curdepth:
-                logging.warning("Your map seems to have shrunk. Re-arranging tiles, just a sec...")
+                self.logger.warning("Your map seems to have shrunk. Re-arranging tiles, just a sec...")
                 for _ in xrange(curdepth - self.p):
                     self._decrease_depth()
     
@@ -332,7 +339,7 @@ class QuadtreeGen(object):
                 quad = Image.open(path[1]).resize((192,192), Image.ANTIALIAS)
                 img.paste(quad, path[0])
             except Exception, e:
-                logging.warning("Couldn't open %s. It may be corrupt, you may need to delete it. %s", path[1], e)
+                self.logger.warning("Couldn't open %s. It may be corrupt, you may need to delete it. %s", path[1], e)
 
         # Save it
         if self.imgformat == 'jpg':
