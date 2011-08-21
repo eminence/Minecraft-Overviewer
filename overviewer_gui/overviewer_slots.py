@@ -18,7 +18,14 @@ class renderThread (QThread):
         print "thread is now running"
 
         numProcs = self.ui.numProcessors.value()
-        w = world.World(self.worlddir, self.outputdir, useBiomeData=False)
+	
+        biomeDir = os.path.join(self.worlddir, "biomes")
+	   if not os.path.exists(biomeDir):
+	       isBiome = 'FALSE'
+	   else:
+	       isBiome = 'TRUE'
+
+        w = world.World(self.worlddir, self.outputdir, useBiomeData=isBiome)
         w.go(numProcs)
         bg_color="#1A1A1A"
         bgcolor = (int(bg_color[1:3],16), int(bg_color[3:5],16), int(bg_color[5:7],16), 0)
@@ -84,7 +91,7 @@ def worldSelect(ui):
 
                 dc.model = QFileSystemModel()
                 dc.model.setFilter(QDir.AllDirs | QDir.NoDotAndDotDot)
-                dc.model.setRootPath(QDir.currentPath())
+		dc.model.setRootPath(QDir.currentPath())
                 dc.treeView.setModel(dc.model)
                 dc.treeView.setRootIndex(dc.model.index(QDir.currentPath()))
 
