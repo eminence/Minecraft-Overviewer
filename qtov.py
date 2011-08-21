@@ -48,6 +48,8 @@ class renderThread (QThread):
         m.go(numProcs)
 
         def statusCallback(complete, total, level, unconditional=False):
+            # TODO calculate the percent complete for the entire render
+            #      not just for this level
             ui.progressBar.setValue(100*(complete/float(total)))
         
         # render the tiles!
@@ -58,29 +60,44 @@ class renderThread (QThread):
         ui.pushButton_goRender.setText("Done!")
 
        
-def worldSelected(dc):
+def worldSelected(ui, dc):
     def _worldSelected():
-        print "World %s has been selected"
-        print dc.model
+        print "worldSelected()"
+        i = dc.treeView.currentIndex()
+        p = dc.treeView.model().filePath(i)
+        print "World %s has been selected" % p
+        ui.lineEdit_pathToWorld.setText(p)
+        ui.pushButton_goRender.setEnabled(True)
+        #ui.dirChooser.deleteLater()
     return _worldSelected 
 
 def worldSelect(ui):
     def _worldSelect(v):
-        print "You selected index %s"% v
-        if v == "Browse...": # display the directory chooser
-            ui.dirChooser = QDialog()
-            dc = Ui_dirChooser()
-            dc.setupUi(ui.dirChooser)
+        index = ui.worldComboBox.findText(v)
+        print "You selected index %s"% index
+        if index == 0:
+            ui.lineEdit_pathToWorld.setText("")
+            ui.pushButton_goRender.setEnabled(False)
+        elif v == "Browse...": # display the directory chooser
+            if not ui.dirChooser:
+                ui.dirChooser = QDialog()
+                dc = Ui_dirChooser()
+                dc.setupUi(ui.dirChooser)
 
-            dc.model = QFileSystemModel()
-            dc.model.setFilter(QDir.AllDirs | QDir.NoDotAndDotDot)
-            dc.model.setRootPath(QDir.currentPath())
-            dc.treeView.setModel(dc.model)
+                dc.model = QFileSystemModel()
+                dc.model.setFilter(QDir.AllDirs | QDir.NoDotAndDotDot)
+                dc.model.setRootPath(QDir.currentPath())
+                dc.treeView.setModel(dc.model)
+                dc.treeView.setRootIndex(dc.model.index(QDir.currentPath()))
 
-            dc.buttonBox.accepted.connect(worldSelected(dc))
+                dc.buttonBox.accepted.connect(worldSelected(ui, dc))
 
             ui.dirChooser.show()
             print "Done with chooser"
+        else:
+            d = ui.worldComboBox.itemData(index)
+            ui.lineEdit_pathToWorld.setText(d)
+            ui.pushButton_goRender.setEnabled(True)
 
     return _worldSelect
         
@@ -110,15 +127,23 @@ app = QApplication(sys.argv)
 MainWindow = QMainWindow()
 ui = Ui_MainWindow()
 ui.setupUi(MainWindow)
+ui.dirChooser = None
 
 ## set up UI
 ui.numProcessors.setMaximum(cpuCount)
 
 
+worlds = world.get_worlds()
+for name, info in sorted(worlds.iteritems()):
+    print name, info['path']
+    ui.worldComboBox.insertItem(ui.worldComboBox.count()-1, str(name), info['path'])
+
 
 ## set up event connections
+
 ui.pushButton_goRender.clicked.connect(goRender(ui))
 ui.worldComboBox.activated.connect(worldSelect(ui))
+
 
 
 MainWindow.show()

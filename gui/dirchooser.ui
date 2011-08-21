@@ -55,7 +55,7 @@
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
    <receiver>dirChooser</receiver>
-   <slot>close()</slot>
+   <slot>hide()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>190</x>
@@ -71,7 +71,7 @@
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
    <receiver>dirChooser</receiver>
-   <slot>close()</slot>
+   <slot>hide()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>190</x>

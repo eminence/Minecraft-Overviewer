@@ -32,17 +32,7 @@
           </property>
           <item>
            <property name="text">
-            <string extracomment="Browser for a diretory">World1</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>World2</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>World3</string>
+            <string extracomment="Browser for a diretory">Select a world</string>
            </property>
           </item>
           <item>
@@ -54,6 +44,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_goRender">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -89,7 +82,7 @@
       <item>
        <widget class="QLineEdit" name="lineEdit_pathToWorld">
         <property name="text">
-         <string>/Users/achin/devel/eminence-overviewer/exmaple</string>
+         <string/>
         </property>
        </widget>
       </item>

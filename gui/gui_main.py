@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'overviewer.ui'
 #
-# Created: Sat Aug 20 22:33:21 2011
+# Created: Sun Aug 21 00:36:11 2011
 #      by: pyside-uic 0.2.12 running on PySide 1.0.5
 #
 # WARNING! All changes made in this file will be lost!
@@ -31,10 +31,9 @@ class Ui_MainWindow(object):
         self.worldComboBox.setObjectName("worldComboBox")
         self.worldComboBox.addItem("")
         self.worldComboBox.addItem("")
-        self.worldComboBox.addItem("")
-        self.worldComboBox.addItem("")
         self.horizontalLayout.addWidget(self.worldComboBox)
         self.pushButton_goRender = QtGui.QPushButton(self.centralwidget)
+        self.pushButton_goRender.setEnabled(False)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -54,6 +53,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.numProcessors)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.lineEdit_pathToWorld = QtGui.QLineEdit(self.centralwidget)
+        self.lineEdit_pathToWorld.setText("")
         self.lineEdit_pathToWorld.setObjectName("lineEdit_pathToWorld")
         self.verticalLayout.addWidget(self.lineEdit_pathToWorld)
         self.lineEdit_pathToOutput = QtGui.QLineEdit(self.centralwidget)
@@ -79,13 +79,10 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
-        self.worldComboBox.setItemText(0, QtGui.QApplication.translate("MainWindow", "World1", None, QtGui.QApplication.UnicodeUTF8))
-        self.worldComboBox.setItemText(1, QtGui.QApplication.translate("MainWindow", "World2", None, QtGui.QApplication.UnicodeUTF8))
-        self.worldComboBox.setItemText(2, QtGui.QApplication.translate("MainWindow", "World3", None, QtGui.QApplication.UnicodeUTF8))
-        self.worldComboBox.setItemText(3, QtGui.QApplication.translate("MainWindow", "Browse...", None, QtGui.QApplication.UnicodeUTF8))
+        self.worldComboBox.setItemText(0, QtGui.QApplication.translate("MainWindow", "Select a world", None, QtGui.QApplication.UnicodeUTF8))
+        self.worldComboBox.setItemText(1, QtGui.QApplication.translate("MainWindow", "Browse...", None, QtGui.QApplication.UnicodeUTF8))
         self.pushButton_goRender.setText(QtGui.QApplication.translate("MainWindow", "Render!", None, QtGui.QApplication.UnicodeUTF8))
         self.numProcessors.setToolTip(QtGui.QApplication.translate("MainWindow", "Processors", None, QtGui.QApplication.UnicodeUTF8))
-        self.lineEdit_pathToWorld.setText(QtGui.QApplication.translate("MainWindow", "/Users/achin/devel/eminence-overviewer/exmaple", None, QtGui.QApplication.UnicodeUTF8))
         self.lineEdit_pathToOutput.setText(QtGui.QApplication.translate("MainWindow", "/Users/achin/devel/eminence-overviewer/output_dir", None, QtGui.QApplication.UnicodeUTF8))
         self.actionExit.setText(QtGui.QApplication.translate("MainWindow", "Exit", None, QtGui.QApplication.UnicodeUTF8))
 

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'dirchooser.ui'
 #
-# Created: Sat Aug 20 22:33:21 2011
+# Created: Sun Aug 21 00:36:11 2011
 #      by: pyside-uic 0.2.12 running on PySide 1.0.5
 #
 # WARNING! All changes made in this file will be lost!
@@ -32,8 +32,8 @@ class Ui_dirChooser(object):
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
         self.retranslateUi(dirChooser)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("accepted()"), dirChooser.close)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("rejected()"), dirChooser.close)
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("accepted()"), dirChooser.hide)
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("rejected()"), dirChooser.hide)
         QtCore.QMetaObject.connectSlotsByName(dirChooser)
 
     def retranslateUi(self, dirChooser):
