@@ -19,12 +19,15 @@ class renderThread (QThread):
 
         numProcs = self.ui.numProcessors.value()
 	
-        biomeDir = os.path.join(self.worlddir, "biomes")
-	   if not os.path.exists(biomeDir):
-	       isBiome = 'FALSE'
-	   else:
-	       isBiome = 'TRUE'
-
+	if self.ui.biome_checkBox.isChecked():
+            biomeDir = os.path.join(self.worlddir, "biomes")
+	    if not os.path.exists(biomeDir):
+	        isBiome = False
+	    else:
+	        isBiome = True
+	else:
+	    isBiome = False
+	
         w = world.World(self.worlddir, self.outputdir, useBiomeData=isBiome)
         w.go(numProcs)
         bg_color="#1A1A1A"

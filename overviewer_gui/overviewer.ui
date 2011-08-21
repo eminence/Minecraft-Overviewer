@@ -14,302 +14,430 @@
    <string>Overviewer GUI</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetDefaultConstraint</enum>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="contextMenuPolicy">
+       <enum>Qt::NoContextMenu</enum>
       </property>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="tabShape">
+       <enum>QTabWidget::Triangular</enum>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <property name="elideMode">
+       <enum>Qt::ElideNone</enum>
+      </property>
+      <property name="movable">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="tabmain">
+       <attribute name="title">
+        <string>Main</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QComboBox" name="worldComboBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <property name="sizeConstraint">
+           <enum>QLayout::SetDefaultConstraint</enum>
           </property>
           <item>
-           <property name="text">
-            <string extracomment="Browser for a diretory">Select a world</string>
-           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QComboBox" name="worldComboBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string extracomment="Browser for a diretory">Select a world</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Browse...</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_goRender">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Render!</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
-           <property name="text">
-            <string>Browse...</string>
-           </property>
+           <widget class="QLineEdit" name="lineEdit_pathToWorld">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
           </item>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton_goRender">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Render!</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSpinBox" name="numProcessors">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="toolTip">
-           <string>Processors</string>
-          </property>
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>4</number>
-          </property>
-         </widget>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_pathToOutput">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QProgressBar" name="progressBar">
+            <property name="value">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </item>
        </layout>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="lineEdit_pathToWorld">
-        <property name="text">
-         <string/>
+      </widget>
+      <widget class="QWidget" name="taboptions">
+       <attribute name="title">
+        <string>Options</string>
+       </attribute>
+       <widget class="QGroupBox" name="rendermodes_groupBox">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>91</width>
+          <height>141</height>
+         </rect>
         </property>
+        <property name="title">
+         <string>Render modes</string>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
+        </property>
+        <property name="checkable">
+         <bool>false</bool>
+        </property>
+        <widget class="QCheckBox" name="render_normal">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>15</y>
+           <width>72</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Normal</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="render_lighting">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>40</y>
+           <width>72</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Lighting</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="render_night">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>65</y>
+           <width>72</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Night</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="render_spawn">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>90</y>
+           <width>72</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Spawn</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="render_cave">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>115</y>
+           <width>72</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Cave</string>
+         </property>
+        </widget>
        </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="lineEdit_pathToOutput">
-        <property name="text">
-         <string>/Users/achin/devel/eminence-overviewer/output_dir</string>
+       <widget class="QGroupBox" name="imageformat_groupBox">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>10</y>
+          <width>91</width>
+          <height>61</height>
+         </rect>
         </property>
+        <property name="title">
+         <string>Image format</string>
+        </property>
+        <widget class="QRadioButton" name="png_radioButton">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>15</y>
+           <width>51</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>PNG</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QRadioButton" name="jpeg_radioButton">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>40</y>
+           <width>51</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>JPEG</string>
+         </property>
+        </widget>
        </widget>
-      </item>
-      <item>
-       <widget class="QProgressBar" name="progressBar">
-        <property name="value">
-         <number>0</number>
+       <widget class="QGroupBox" name="pngadvanced_groupBox">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>80</y>
+          <width>141</width>
+          <height>91</height>
+         </rect>
         </property>
+        <property name="title">
+         <string>PNG Advanced options</string>
+        </property>
+        <widget class="QRadioButton" name="pngcrush_radioButton">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>15</y>
+           <width>83</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>pngcrush</string>
+         </property>
+        </widget>
+        <widget class="QRadioButton" name="pngcrushadvdef_radioButto">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>40</y>
+           <width>111</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>pngcrush+advdef</string>
+         </property>
+        </widget>
+        <widget class="QRadioButton" name="pngcrushadvdef_agr_radioButton">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>65</y>
+           <width>121</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>pngcrush+advdef (A)</string>
+         </property>
+        </widget>
        </widget>
-      </item>
-      <item>
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+       <widget class="QGroupBox" name="processors_groupBox">
+        <property name="geometry">
+         <rect>
+          <x>300</x>
+          <y>10</y>
+          <width>71</width>
+          <height>41</height>
+         </rect>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
+        <property name="title">
+         <string>Processors</string>
         </property>
-       </spacer>
-      </item>
-     </layout>
+        <widget class="QSpinBox" name="numProcessors">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>15</y>
+           <width>46</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>Processors</string>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>4</number>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="renderoptions_groupBox">
+        <property name="geometry">
+         <rect>
+          <x>300</x>
+          <y>60</y>
+          <width>120</width>
+          <height>121</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>Render options</string>
+        </property>
+        <widget class="QCheckBox" name="biome_checkBox">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>15</y>
+           <width>72</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Use biome</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="forcerender_checkBox">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>40</y>
+           <width>72</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Force render</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="skipjs_checkBox">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>65</y>
+           <width>72</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Skip JS</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="skipsigns_checkBox">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>90</y>
+           <width>72</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Skip signs</string>
+         </property>
+        </widget>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tabhelp">
+       <attribute name="title">
+        <string>Help</string>
+       </attribute>
+      </widget>
+     </widget>
     </item>
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>475</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuOptions">
-    <property name="title">
-     <string>Options</string>
-    </property>
-    <widget class="QMenu" name="menuRendermodes">
-     <property name="title">
-      <string>Render modes</string>
-     </property>
-     <addaction name="actionNormal"/>
-     <addaction name="actionLighting"/>
-     <addaction name="actionNight"/>
-     <addaction name="actionSpawn"/>
-     <addaction name="actionCave"/>
-    </widget>
-    <widget class="QMenu" name="menuImage_format">
-     <property name="title">
-      <string>Image format</string>
-     </property>
-     <widget class="QMenu" name="menuAdvanced_options_for_PNG">
-      <property name="title">
-       <string>Advanced options for PNG</string>
-      </property>
-      <addaction name="actionPngcrush"/>
-      <addaction name="actionPngcrush_advdef"/>
-      <addaction name="actionPngcrush_advdef_agressive"/>
-     </widget>
-     <addaction name="actionPNG"/>
-     <addaction name="actionJPEG"/>
-     <addaction name="menuAdvanced_options_for_PNG"/>
-    </widget>
-    <addaction name="menuRendermodes"/>
-    <addaction name="actionForce_render"/>
-    <addaction name="actionSkip_JS"/>
-    <addaction name="actionSkip_signs"/>
-    <addaction name="menuImage_format"/>
-   </widget>
-   <widget class="QMenu" name="menuHelp">
-    <property name="title">
-     <string>Help</string>
-    </property>
-    <addaction name="actionAbout"/>
-   </widget>
-   <addaction name="menuOptions"/>
-   <addaction name="menuHelp"/>
-  </widget>
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
    </property>
   </action>
-  <action name="actionNormal">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Normal</string>
-   </property>
-  </action>
-  <action name="actionLighting">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Lighting</string>
-   </property>
-  </action>
-  <action name="actionNight">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Night</string>
-   </property>
-  </action>
-  <action name="actionSpawn">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Spawn</string>
-   </property>
-  </action>
-  <action name="actionCave">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Cave</string>
-   </property>
-  </action>
-  <action name="actionForce_render">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Force render</string>
-   </property>
-  </action>
-  <action name="actionSkip_JS">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Skip JS</string>
-   </property>
-  </action>
-  <action name="actionSkip_signs">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Skip signs</string>
-   </property>
-  </action>
-  <action name="actionJPEG">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>JPEG</string>
-   </property>
-  </action>
-  <action name="actionPngcrush">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>pngcrush</string>
-   </property>
-  </action>
-  <action name="actionPngcrush_advdef">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>pngcrush+advdef</string>
-   </property>
-  </action>
-  <action name="actionPngcrush_advdef_agressive">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>pngcrush+advdef (agressive)</string>
-   </property>
-  </action>
-  <action name="action1">
-   <property name="text">
-    <string>1</string>
-   </property>
-  </action>
-  <action name="actionPNG">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>PNG</string>
-   </property>
-  </action>
-  <action name="actionAbout">
-   <property name="text">
-    <string>About</string>
-   </property>
-  </action>
  </widget>
+ <tabstops>
+  <tabstop>worldComboBox</tabstop>
+  <tabstop>pushButton_goRender</tabstop>
+  <tabstop>lineEdit_pathToWorld</tabstop>
+  <tabstop>lineEdit_pathToOutput</tabstop>
+  <tabstop>worldComboBox</tabstop>
+  <tabstop>pushButton_goRender</tabstop>
+  <tabstop>lineEdit_pathToWorld</tabstop>
+  <tabstop>lineEdit_pathToOutput</tabstop>
+  <tabstop>tabmain</tabstop>
+  <tabstop>taboptions</tabstop>
+  <tabstop>tabhelp</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -323,8 +451,8 @@
      <y>-1</y>
     </hint>
     <hint type="destinationlabel">
-     <x>302</x>
-     <y>198</y>
+     <x>237</x>
+     <y>124</y>
     </hint>
    </hints>
   </connection>
