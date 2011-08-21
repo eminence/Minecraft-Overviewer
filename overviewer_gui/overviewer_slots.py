@@ -20,10 +20,10 @@ class renderThread (QThread):
         numProcs = self.ui.numProcessors.value()
 	
         biomeDir = os.path.join(self.worlddir, "biomes")
-	   if not os.path.exists(biomeDir):
-	       isBiome = 'FALSE'
-	   else:
-	       isBiome = 'TRUE'
+        if not os.path.exists(biomeDir):
+            isBiome = False
+        else:
+            isBiome = True
 
         w = world.World(self.worlddir, self.outputdir, useBiomeData=isBiome)
         w.go(numProcs)
