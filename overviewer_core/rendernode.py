@@ -135,8 +135,11 @@ class RenderNode(object):
         logging.info("{0}/{1} ({4}%) tiles complete on level {2}/{3}".format(
                 complete, total, level, self.max_p, '%.1f' % ( (100.0 * complete) / total) ))
                 
-    def go(self, procs):
+    def go(self, procs, statusCallback=None):
         """Renders all tiles"""
+
+        if statusCallback == None:
+            statusCallback = self.print_statusline
         
         logging.debug("Parent process {0}".format(os.getpid()))
         # Create a pool
@@ -199,18 +202,18 @@ class RenderNode(object):
                     while count_to_remove > 0:
                         count_to_remove -= 1
                         complete += results.popleft().get()
-                        self.print_statusline(complete, total, 1)  
+                        statusCallback(complete, total, 2)  
             if len(results) > (10000//batch_size):
                 # Empty the queue before adding any more, so that memory
                 # required has an upper bound
                 while len(results) > (500//batch_size):
                     complete += results.popleft().get()
-                    self.print_statusline(complete, total, 1)
+                    statusCallback(complete, total, 1)
 
         # Wait for the rest of the results
         while len(results) > 0:
             complete += results.popleft().get()
-            self.print_statusline(complete, total, 1)
+            statusCallback(complete, total, 1)
         for world in self.worlds:    
             try:
                 while (1):
@@ -225,7 +228,7 @@ class RenderNode(object):
             except Queue.Empty:
                 pass
 
-        self.print_statusline(complete, total, 1, True)
+        statusCallback(complete, total, 1, True)
 
         # Now do the other layers
         for zoom in xrange(self.max_p-1, 0, -1):
@@ -249,17 +252,17 @@ class RenderNode(object):
                         while count_to_remove > 0:
                             count_to_remove -= 1
                             complete += results.popleft().get()
-                            self.print_statusline(complete, total, level)
+                            statusCallback(complete, total, level)
                 if len(results) > (10000/batch_size):
                     while len(results) > (500/batch_size):
                         complete += results.popleft().get()
-                        self.print_statusline(complete, total, level)
+                        statusCallback(complete, total, level)
             # Empty the queue
             while len(results) > 0:
                 complete += results.popleft().get()
-                self.print_statusline(complete, total, level)
+                statusCallback(complete, total, level)
 
-            self.print_statusline(complete, total, level, True)
+            statusCallback(complete, total, level, True)
 
             logging.info("Done")
 
