@@ -96,6 +96,8 @@ if py2exe is not None:
     setup_kwargs['version'] = util.findGitVersion().replace("-",".")
 
     setup_kwargs['console'] = ['overviewer.py']
+    setup_kwargs['windows'] = ['qtov.py']
+    
     setup_kwargs['data_files'] = [('', doc_files)]
     setup_kwargs['data_files'] += recursive_data_files('overviewer_core/data/textures', 'textures')
     setup_kwargs['data_files'] += recursive_data_files('overviewer_core/data/web_assets', 'web_assets')
@@ -104,7 +106,9 @@ if py2exe is not None:
         b = 3
     else:
         b = 1
-    setup_kwargs['options']['py2exe'] = {'bundle_files' : b, 'excludes': 'Tkinter'}
+    setup_kwargs['options']['py2exe'] = {'bundle_files' : b, 'excludes': 'Tkinter', 'dll_excludes': ['MSVCP90.dll']}
+    setup_kwargs['data_files'] += [('gui',['gui/gui_main.py'])] # not sure why py2exe can't include this file automatically
+                                                                # it should really be bundled into qtov.exe
 
 #
 # py2app options
