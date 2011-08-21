@@ -361,7 +361,7 @@ def get_worlds():
         world_dat = os.path.join(dir, "level.dat")
         if not os.path.exists(world_dat): continue
         info = nbt.load(world_dat)[1]
-        info['Data']['path'] = os.path.join(save_dir, dir)
+        info['Data']['path'] = os.path.join(os.getcwd(),dir)
         if 'LevelName' in info['Data'].keys():
             ret[info['Data']['LevelName']] = info['Data']
     

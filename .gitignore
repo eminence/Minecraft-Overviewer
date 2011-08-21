@@ -31,3 +31,6 @@ overviewer_core/overviewer_version.py
 #Script files, as users may want their own scripts.
 *.sh
 *.bat
+
+# Example map
+exmaple/
