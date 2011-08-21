@@ -1,7 +1,6 @@
 
 import sys
 import os
-sys.path.append("gui")
 
 from PySide.QtCore import *
 from PySide.QtGui import *
@@ -13,8 +12,7 @@ import multiprocessing
 
 cpuCount = multiprocessing.cpu_count()
 
-from gui_main import Ui_MainWindow
-
+from gui import *
 
 class renderThread (QThread):
     def __init__(self, ui, worlddir, outputdir):
@@ -59,6 +57,32 @@ class renderThread (QThread):
         m.finalize()
         ui.pushButton_goRender.setText("Done!")
 
+       
+def worldSelected(dc):
+    def _worldSelected():
+        print "World %s has been selected"
+        print dc.model
+    return _worldSelected 
+
+def worldSelect(ui):
+    def _worldSelect(v):
+        print "You selected index %s"% v
+        if v == "Browse...": # display the directory chooser
+            ui.dirChooser = QDialog()
+            dc = Ui_dirChooser()
+            dc.setupUi(ui.dirChooser)
+
+            dc.model = QFileSystemModel()
+            dc.model.setFilter(QDir.AllDirs | QDir.NoDotAndDotDot)
+            dc.model.setRootPath(QDir.currentPath())
+            dc.treeView.setModel(dc.model)
+
+            dc.buttonBox.accepted.connect(worldSelected(dc))
+
+            ui.dirChooser.show()
+            print "Done with chooser"
+
+    return _worldSelect
         
 
 
@@ -94,6 +118,7 @@ ui.numProcessors.setMaximum(cpuCount)
 
 ## set up event connections
 ui.pushButton_goRender.clicked.connect(goRender(ui))
+ui.worldComboBox.activated.connect(worldSelect(ui))
 
 
 MainWindow.show()

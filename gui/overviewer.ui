@@ -32,7 +32,7 @@
           </property>
           <item>
            <property name="text">
-            <string>World1</string>
+            <string extracomment="Browser for a diretory">World1</string>
            </property>
           </item>
           <item>
@@ -43,6 +43,11 @@
           <item>
            <property name="text">
             <string>World3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Browse...</string>
            </property>
           </item>
          </widget>

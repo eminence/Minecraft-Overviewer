@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'overviewer.ui'
 #
-# Created: Sat Aug 20 20:12:13 2011
+# Created: Sat Aug 20 22:33:21 2011
 #      by: pyside-uic 0.2.12 running on PySide 1.0.5
 #
 # WARNING! All changes made in this file will be lost!
@@ -29,6 +29,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.worldComboBox.sizePolicy().hasHeightForWidth())
         self.worldComboBox.setSizePolicy(sizePolicy)
         self.worldComboBox.setObjectName("worldComboBox")
+        self.worldComboBox.addItem("")
         self.worldComboBox.addItem("")
         self.worldComboBox.addItem("")
         self.worldComboBox.addItem("")
@@ -81,6 +82,7 @@ class Ui_MainWindow(object):
         self.worldComboBox.setItemText(0, QtGui.QApplication.translate("MainWindow", "World1", None, QtGui.QApplication.UnicodeUTF8))
         self.worldComboBox.setItemText(1, QtGui.QApplication.translate("MainWindow", "World2", None, QtGui.QApplication.UnicodeUTF8))
         self.worldComboBox.setItemText(2, QtGui.QApplication.translate("MainWindow", "World3", None, QtGui.QApplication.UnicodeUTF8))
+        self.worldComboBox.setItemText(3, QtGui.QApplication.translate("MainWindow", "Browse...", None, QtGui.QApplication.UnicodeUTF8))
         self.pushButton_goRender.setText(QtGui.QApplication.translate("MainWindow", "Render!", None, QtGui.QApplication.UnicodeUTF8))
         self.numProcessors.setToolTip(QtGui.QApplication.translate("MainWindow", "Processors", None, QtGui.QApplication.UnicodeUTF8))
         self.lineEdit_pathToWorld.setText(QtGui.QApplication.translate("MainWindow", "/Users/achin/devel/eminence-overviewer/exmaple", None, QtGui.QApplication.UnicodeUTF8))
