@@ -12,7 +12,7 @@ import multiprocessing
 
 cpuCount = multiprocessing.cpu_count()
 
-from gui import *
+from overviewer_gui import *
 
 class renderThread (QThread):
     def __init__(self, ui, worlddir, outputdir):
