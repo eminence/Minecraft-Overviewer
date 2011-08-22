@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'overviewer.ui'
 #
-# Created: Sun Aug 21 22:50:25 2011
+# Created: Mon Aug 22 19:41:20 2011
 #      by: pyside-uic 0.2.9 running on PySide 1.0.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -70,29 +70,30 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.tabmain, "")
         self.taboptions = QtGui.QWidget()
         self.taboptions.setObjectName("taboptions")
+        self.horizontalLayout_2 = QtGui.QHBoxLayout(self.taboptions)
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.rendermodes_groupBox = QtGui.QGroupBox(self.taboptions)
-        self.rendermodes_groupBox.setGeometry(QtCore.QRect(10, 10, 91, 141))
         self.rendermodes_groupBox.setFlat(False)
         self.rendermodes_groupBox.setCheckable(False)
         self.rendermodes_groupBox.setObjectName("rendermodes_groupBox")
         self.render_normal = QtGui.QCheckBox(self.rendermodes_groupBox)
-        self.render_normal.setGeometry(QtCore.QRect(10, 15, 72, 20))
+        self.render_normal.setGeometry(QtCore.QRect(10, 15, 56, 17))
         self.render_normal.setChecked(True)
         self.render_normal.setObjectName("render_normal")
         self.render_lighting = QtGui.QCheckBox(self.rendermodes_groupBox)
-        self.render_lighting.setGeometry(QtCore.QRect(10, 40, 72, 17))
+        self.render_lighting.setGeometry(QtCore.QRect(10, 40, 60, 17))
         self.render_lighting.setObjectName("render_lighting")
         self.render_night = QtGui.QCheckBox(self.rendermodes_groupBox)
-        self.render_night.setGeometry(QtCore.QRect(10, 65, 72, 17))
+        self.render_night.setGeometry(QtCore.QRect(10, 65, 48, 17))
         self.render_night.setObjectName("render_night")
         self.render_spawn = QtGui.QCheckBox(self.rendermodes_groupBox)
-        self.render_spawn.setGeometry(QtCore.QRect(10, 90, 72, 17))
+        self.render_spawn.setGeometry(QtCore.QRect(10, 90, 55, 17))
         self.render_spawn.setObjectName("render_spawn")
         self.render_cave = QtGui.QCheckBox(self.rendermodes_groupBox)
-        self.render_cave.setGeometry(QtCore.QRect(10, 115, 72, 17))
+        self.render_cave.setGeometry(QtCore.QRect(10, 115, 48, 17))
         self.render_cave.setObjectName("render_cave")
+        self.horizontalLayout_2.addWidget(self.rendermodes_groupBox)
         self.imageformat_groupBox = QtGui.QGroupBox(self.taboptions)
-        self.imageformat_groupBox.setGeometry(QtCore.QRect(130, 10, 91, 61))
         self.imageformat_groupBox.setObjectName("imageformat_groupBox")
         self.png_radioButton = QtGui.QRadioButton(self.imageformat_groupBox)
         self.png_radioButton.setGeometry(QtCore.QRect(10, 15, 51, 17))
@@ -101,33 +102,24 @@ class Ui_MainWindow(object):
         self.jpeg_radioButton = QtGui.QRadioButton(self.imageformat_groupBox)
         self.jpeg_radioButton.setGeometry(QtCore.QRect(10, 40, 51, 17))
         self.jpeg_radioButton.setObjectName("jpeg_radioButton")
+        self.horizontalLayout_2.addWidget(self.imageformat_groupBox)
         self.pngadvanced_groupBox = QtGui.QGroupBox(self.taboptions)
-        self.pngadvanced_groupBox.setGeometry(QtCore.QRect(130, 80, 141, 91))
         self.pngadvanced_groupBox.setObjectName("pngadvanced_groupBox")
         self.pngcrush_radioButton = QtGui.QRadioButton(self.pngadvanced_groupBox)
-        self.pngcrush_radioButton.setGeometry(QtCore.QRect(10, 15, 83, 17))
+        self.pngcrush_radioButton.setGeometry(QtCore.QRect(10, 40, 83, 17))
         self.pngcrush_radioButton.setObjectName("pngcrush_radioButton")
         self.pngcrushadvdef_radioButto = QtGui.QRadioButton(self.pngadvanced_groupBox)
-        self.pngcrushadvdef_radioButto.setGeometry(QtCore.QRect(10, 40, 111, 17))
+        self.pngcrushadvdef_radioButto.setGeometry(QtCore.QRect(10, 65, 111, 17))
         self.pngcrushadvdef_radioButto.setObjectName("pngcrushadvdef_radioButto")
         self.pngcrushadvdef_agr_radioButton = QtGui.QRadioButton(self.pngadvanced_groupBox)
-        self.pngcrushadvdef_agr_radioButton.setGeometry(QtCore.QRect(10, 65, 121, 17))
+        self.pngcrushadvdef_agr_radioButton.setGeometry(QtCore.QRect(10, 90, 111, 31))
         self.pngcrushadvdef_agr_radioButton.setObjectName("pngcrushadvdef_agr_radioButton")
-        self.processors_groupBox = QtGui.QGroupBox(self.taboptions)
-        self.processors_groupBox.setGeometry(QtCore.QRect(300, 10, 71, 41))
-        self.processors_groupBox.setObjectName("processors_groupBox")
-        self.numProcessors = QtGui.QSpinBox(self.processors_groupBox)
-        self.numProcessors.setGeometry(QtCore.QRect(10, 15, 46, 20))
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.numProcessors.sizePolicy().hasHeightForWidth())
-        self.numProcessors.setSizePolicy(sizePolicy)
-        self.numProcessors.setMinimum(1)
-        self.numProcessors.setMaximum(4)
-        self.numProcessors.setObjectName("numProcessors")
+        self.none_radioButton = QtGui.QRadioButton(self.pngadvanced_groupBox)
+        self.none_radioButton.setGeometry(QtCore.QRect(10, 15, 82, 17))
+        self.none_radioButton.setChecked(True)
+        self.none_radioButton.setObjectName("none_radioButton")
+        self.horizontalLayout_2.addWidget(self.pngadvanced_groupBox)
         self.renderoptions_groupBox = QtGui.QGroupBox(self.taboptions)
-        self.renderoptions_groupBox.setGeometry(QtCore.QRect(300, 60, 120, 121))
         self.renderoptions_groupBox.setObjectName("renderoptions_groupBox")
         self.biome_checkBox = QtGui.QCheckBox(self.renderoptions_groupBox)
         self.biome_checkBox.setGeometry(QtCore.QRect(10, 15, 72, 17))
@@ -141,9 +133,28 @@ class Ui_MainWindow(object):
         self.skipsigns_checkBox = QtGui.QCheckBox(self.renderoptions_groupBox)
         self.skipsigns_checkBox.setGeometry(QtCore.QRect(10, 90, 72, 17))
         self.skipsigns_checkBox.setObjectName("skipsigns_checkBox")
+        self.horizontalLayout_2.addWidget(self.renderoptions_groupBox)
+        self.processors_groupBox = QtGui.QGroupBox(self.taboptions)
+        self.processors_groupBox.setObjectName("processors_groupBox")
+        self.numProcessors = QtGui.QSpinBox(self.processors_groupBox)
+        self.numProcessors.setGeometry(QtCore.QRect(10, 15, 46, 20))
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.numProcessors.sizePolicy().hasHeightForWidth())
+        self.numProcessors.setSizePolicy(sizePolicy)
+        self.numProcessors.setMinimum(1)
+        self.numProcessors.setMaximum(4)
+        self.numProcessors.setObjectName("numProcessors")
+        self.horizontalLayout_2.addWidget(self.processors_groupBox)
         self.tabWidget.addTab(self.taboptions, "")
         self.tabhelp = QtGui.QWidget()
         self.tabhelp.setObjectName("tabhelp")
+        self.horizontalLayout_3 = QtGui.QHBoxLayout(self.tabhelp)
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.textBrowser = QtGui.QTextBrowser(self.tabhelp)
+        self.textBrowser.setObjectName("textBrowser")
+        self.horizontalLayout_3.addWidget(self.textBrowser)
         self.tabWidget.addTab(self.tabhelp, "")
         self.verticalLayout.addWidget(self.tabWidget)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -186,15 +197,35 @@ class Ui_MainWindow(object):
         self.pngadvanced_groupBox.setTitle(QtGui.QApplication.translate("MainWindow", "PNG Advanced options", None, QtGui.QApplication.UnicodeUTF8))
         self.pngcrush_radioButton.setText(QtGui.QApplication.translate("MainWindow", "pngcrush", None, QtGui.QApplication.UnicodeUTF8))
         self.pngcrushadvdef_radioButto.setText(QtGui.QApplication.translate("MainWindow", "pngcrush+advdef", None, QtGui.QApplication.UnicodeUTF8))
-        self.pngcrushadvdef_agr_radioButton.setText(QtGui.QApplication.translate("MainWindow", "pngcrush+advdef (A)", None, QtGui.QApplication.UnicodeUTF8))
-        self.processors_groupBox.setTitle(QtGui.QApplication.translate("MainWindow", "Processors", None, QtGui.QApplication.UnicodeUTF8))
-        self.numProcessors.setToolTip(QtGui.QApplication.translate("MainWindow", "Processors", None, QtGui.QApplication.UnicodeUTF8))
+        self.pngcrushadvdef_agr_radioButton.setText(QtGui.QApplication.translate("MainWindow", "pngcrush+advdef\n"
+"(Agressive)", None, QtGui.QApplication.UnicodeUTF8))
+        self.none_radioButton.setText(QtGui.QApplication.translate("MainWindow", "None", None, QtGui.QApplication.UnicodeUTF8))
         self.renderoptions_groupBox.setTitle(QtGui.QApplication.translate("MainWindow", "Render options", None, QtGui.QApplication.UnicodeUTF8))
         self.biome_checkBox.setText(QtGui.QApplication.translate("MainWindow", "Use biome", None, QtGui.QApplication.UnicodeUTF8))
         self.forcerender_checkBox.setText(QtGui.QApplication.translate("MainWindow", "Force render", None, QtGui.QApplication.UnicodeUTF8))
         self.skipjs_checkBox.setText(QtGui.QApplication.translate("MainWindow", "Skip JS", None, QtGui.QApplication.UnicodeUTF8))
         self.skipsigns_checkBox.setText(QtGui.QApplication.translate("MainWindow", "Skip signs", None, QtGui.QApplication.UnicodeUTF8))
+        self.processors_groupBox.setTitle(QtGui.QApplication.translate("MainWindow", "Processors", None, QtGui.QApplication.UnicodeUTF8))
+        self.numProcessors.setToolTip(QtGui.QApplication.translate("MainWindow", "Processors", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.taboptions), QtGui.QApplication.translate("MainWindow", "Options", None, QtGui.QApplication.UnicodeUTF8))
+        self.textBrowser.setHtml(QtGui.QApplication.translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600; font-style:italic;\">Overviewer GUI</span></p>\n"
+"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt; font-weight:600; font-style:italic;\"></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">This is a Qt GUI for the Overviewer script for Minecraft, which generates Google like maps of your Minecraft world.</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;\"></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Usage:</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;\"></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Just run qtov.py, and it will show you main dialog where you can browse for your Minecraft world folder.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Then select the output folder where you want the files to be (HTML, JS, Tiles)</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;\"></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">You can tweak certain options of the render process under the \'Options\' tab.</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;\"></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Options:</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;\"></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;\"></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabhelp), QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
         self.actionExit.setText(QtGui.QApplication.translate("MainWindow", "Exit", None, QtGui.QApplication.UnicodeUTF8))
 
