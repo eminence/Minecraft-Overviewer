@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'dirchooser.ui'
 #
-# Created: Sun Aug 21 22:50:25 2011
+# Created: Mon Aug 22 19:41:20 2011
 #      by: pyside-uic 0.2.9 running on PySide 1.0.3
 #
 # WARNING! All changes made in this file will be lost!
