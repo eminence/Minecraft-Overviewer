@@ -27,6 +27,8 @@ class renderThread (QThread):
                 isBiome = True
         else:
             isBiome = False
+        
+        modes = [x.text() for x in filter(lambda y: y.isChecked(), self.ui.render_mode_boxes)]
 	
         w = world.World(self.worlddir, self.outputdir, useBiomeData=isBiome)
         w.go(numProcs)
@@ -36,8 +38,12 @@ class renderThread (QThread):
 
         qtree_args = {'imgformat':'png', 'forcerender':False, 'bgcolor': bgcolor}
         q = []
-        qtree = quadtree.QuadtreeGen(w, self.outputdir, rendermode="normal", tiledir='tiles', **qtree_args)
-        q.append(qtree)
+        for rendermode in modes:
+            if rendermode == 'normal':
+                qtree = quadtree.QuadtreeGen(w, self.outputdir, rendermode=rendermode, tiledir='tiles', **qtree_args)
+            else:
+                qtree = quadtree.QuadtreeGen(w, self.outputdir, rendermode=rendermode, **qtree_args)
+            q.append(qtree)
 
         # do quadtree-level preprocessing
         for qtree in q:
@@ -77,6 +83,10 @@ def worldSelected(ui, dc):
         #ui.dirChooser.deleteLater()
     return _worldSelected 
 
+def loadInfo(ui, dc):
+    def _loadInfo(index):
+        print "index: %r" % index
+    return _loadInfo
 
 
 def worldSelect(ui):
@@ -94,11 +104,12 @@ def worldSelect(ui):
 
                 dc.model = QFileSystemModel()
                 dc.model.setFilter(QDir.AllDirs | QDir.NoDotAndDotDot)
-		dc.model.setRootPath(QDir.currentPath())
+                dc.model.setRootPath(QDir.currentPath())
                 dc.treeView.setModel(dc.model)
                 dc.treeView.setRootIndex(dc.model.index(QDir.currentPath()))
 
                 dc.buttonBox.accepted.connect(worldSelected(ui, dc))
+                dc.treeView.clicked.connect(loadInfo(ui, dc))
 
             ui.dirChooser.show()
             print "Done with chooser"
@@ -127,6 +138,13 @@ def goRender(ui):
         ui.runThread.start()
         print "Started render thread"
 
-
+    def _tmpDebug():
+        # tempory debugging
+        modes = [x.text() for x in filter(lambda y: y.isChecked(), ui.render_mode_boxes)]
+        msgBox = QMessageBox()
+        msgBox.setText("debug")
+        msgBox.setInformativeText("world is %s\nmodes: %r" % (ui.lineEdit_pathToWorld.text(), modes))
+        msgBox.exec_()
     return _goRender
+    #return _tmpDebug
 

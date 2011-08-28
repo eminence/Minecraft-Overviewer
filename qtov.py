@@ -24,6 +24,7 @@ from PySide.QtGui import *
 
 from overviewer_core import optimizeimages, world, quadtree
 from overviewer_core import googlemap, rendernode
+from overviewer_core import c_overviewer
 import multiprocessing
 
 cpuCount = multiprocessing.cpu_count()
@@ -50,6 +51,20 @@ for name, info in sorted(worlds.iteritems()):
     ui.worldComboBox.insertItem(ui.worldComboBox.count()-1, str(name), info['path'])
 
 
+avail_rendermodes = c_overviewer.get_render_modes()
+rendermode_info = map(c_overviewer.get_render_mode_info, avail_rendermodes)
+name_width = max(map(lambda i: len(i['name']), rendermode_info))
+
+ui.render_mode_boxes = []
+for info in rendermode_info:
+    
+    new_checkbox = QCheckBox(ui.renderModeGroupBox)
+    ui.renderModeLayout.addWidget(new_checkbox)
+    new_checkbox.setText(info['name'])
+    new_checkbox.setToolTip(info['description'])
+    ui.render_mode_boxes.append(new_checkbox)
+    print "{name:{0}} {description}".format(name_width, **info)
+
 ## set up event connections
 
 ui.pushButton_goRender.clicked.connect(goRender(ui))
@@ -58,5 +73,6 @@ ui.worldComboBox.activated.connect(worldSelect(ui))
 
 
 MainWindow.show()
+
 sys.exit(app.exec_())
 
