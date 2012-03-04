@@ -43,6 +43,8 @@ def checkBadEscape(s):
         fixed = True
     return (fixed, fixed_string)
 
+def validateSigns(filterlist):
+    return filterlist
 
 def validateWorldPath(worldpath):
     _, worldpath = checkBadEscape(worldpath)

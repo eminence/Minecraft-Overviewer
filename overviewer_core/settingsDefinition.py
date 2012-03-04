@@ -75,6 +75,7 @@ renders = Setting(required=True, default=util.OrderedDict(),
             "rerenderprob": Setting(required=True, validator=validateFloat, default=0),
             "crop": Setting(required=False, validator=validateCrop, default=None),
             "changelist": Setting(required=False, validator=validateStr, default=None),
+            "signs": Setting(required=False, validator=validateSigns, default=[]),
             
             # Remove this eventually (once people update their configs)
             "worldname": Setting(required=False, default=None,
