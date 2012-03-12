@@ -145,6 +145,11 @@ class World(object):
        
         # TODO figure out where to handle regionlists
 
+    # Try to use the same heuristic that bukkit uses to name worlds
+    def get_name(self):
+        # use the name of the folder containing level.dat
+        return os.path.basename(self.worlddir)
+
     def get_regionsets(self):
         return self.regionsets
     def get_regionset(self, index):
@@ -195,6 +200,8 @@ class World(object):
         
         # Open up the chunk that the spawn is in
         regionset = self.get_regionset("overworld")
+        if regionset == None:
+            return None
         try:
             chunk = regionset.get_chunk(chunkX, chunkZ)
         except ChunkDoesntExist:

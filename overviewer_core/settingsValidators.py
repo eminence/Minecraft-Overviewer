@@ -182,6 +182,20 @@ def validateCrop(value):
         value[1],value[3] = value[3],value[1]
     return value
 
+def validateAvatarUrl(value):
+    return value
+
+def validateReloadFreq(value):
+    val = int(value)
+    if val <= 1:
+        raise ValidationException("Sorry, %r is too small for the reload frequenty.  Must be greater than 1 second")
+    if val > 3600:
+        raise ValidationException("Sorry, %r is too big for the reload frequenty.  Must be less than 3600 seconds")
+    return val
+
+def validateJson(value):
+    return value
+
 def make_dictValidator(keyvalidator, valuevalidator):
     """Compose and return a dict validator -- a validator that validates each
     key and value in a dictionary.
@@ -320,3 +334,6 @@ def _get_closest_match(s, keys):
     if mindist <= threshold:
         return minmatch
     return None
+
+
+

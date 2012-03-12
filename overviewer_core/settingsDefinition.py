@@ -93,3 +93,12 @@ processes = Setting(required=True, validator=int, default=-1)
 # memcached is an option, but unless your IO costs are really high, it just
 # ends up adding overhead and isn't worth it.
 memcached_host = Setting(required=False, validator=str, default=None)
+
+
+# Playermarker config
+playermarkers = Setting(required=False, default=dict(enabled=False, markerjson=None), validator=make_configDictValidator({
+    "enabled": Setting(required=False, validator=validateBool, default=False),
+    "avatarurl": Setting(required=True, validator=validateAvatarUrl, default="http://overviewer-avatars.appspot.com/?player="),
+    "reloadfrequenty": Setting(required=False, validator=validateReloadFreq, default=5),
+    "markerjson": Setting(required=False, validator=validateJson, default=None)
+    }))

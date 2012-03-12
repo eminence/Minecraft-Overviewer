@@ -517,6 +517,7 @@ class TileSet(object):
                     (" - " + self.options.get('dimension') if self.options.get('dimension') != 'default' else ''),
                 last_rendertime = self.max_chunk_mtime,
                 imgextension = self.imgextension,
+                world_name = self.options.get("world_name"),
                 )
         if (self.regionset.get_type() == "overworld"):
             d.update({"spawn": self.options.get("spawn")})
