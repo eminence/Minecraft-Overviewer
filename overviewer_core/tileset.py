@@ -943,7 +943,7 @@ class TileSet(object):
         max_chunk_mtime = 0
         for col, row, chunkx, chunky, chunkz, chunk_mtime in chunks:
             xpos = -192 + (col-colstart)*192
-            ypos = -96 + (row-rowstart)*96 + (16-1 - chunky)*192
+            ypos = -96 + (row-rowstart)*96 + (88-1 - chunky)*192
 
             if chunk_mtime > max_chunk_mtime:
                 max_chunk_mtime = chunk_mtime
@@ -1219,12 +1219,12 @@ def get_chunks_by_tile(tile, regionset):
     # First do the odd. For each chunk in the tile's odd column the tile
     # "passes through" three chunk sections.
     oddcol_sections = []
-    for i, y in enumerate(reversed(xrange(16))):
+    for i, y in enumerate(reversed(xrange(88))):
         for row in xrange(tile.row + 3 - i*2, tile.row - 2 - i*2, -2):
             oddcol_sections.append((tile.col+1, row, y))
 
     evencol_sections = []
-    for i, y in enumerate(reversed(xrange(16))):
+    for i, y in enumerate(reversed(xrange(88))):
         for row in xrange(tile.row + 4 - i*2, tile.row - 3 - i*2, -2):
             evencol_sections.append((tile.col+2, row, y))
             evencol_sections.append((tile.col, row, y))
