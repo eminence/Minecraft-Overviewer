@@ -36,6 +36,9 @@ from .optimizeimages import optimize_image
 import rendermodes
 import c_overviewer
 
+# used everywhere, mostly to keep track of where it's used for now
+SECTIONS_PER_CHUNK = 52
+
 """
 
 tileset.py contains the TileSet class, and in general, routines that manage a
@@ -585,7 +588,7 @@ class TileSet(object):
             # rare cases when the bottom of the map is close to a border, it
             # could get cut off
             if xradius >= bounds.maxcol and -xradius <= bounds.mincol and \
-                    yradius >= bounds.maxrow + 32 and -yradius <= bounds.minrow:
+                    yradius >= bounds.maxrow + (SECTIONS_PER_CHUNK*2) and -yradius <= bounds.minrow:
                 break
         self.treedepth = p
         self.xradius = xradius
@@ -779,7 +782,7 @@ class TileSet(object):
                 # rendering, but since a tile gets touched up to 32 times
                 # (once for each chunk in it), divide the probability by
                 # 32.
-                if rerender_prob and rerender_prob/32 > random.random():
+                if rerender_prob and rerender_prob/(SECTIONS_PER_CHUNK*2) > random.random():
                     dirty.add(tile.path)
                     continue
 
@@ -943,7 +946,7 @@ class TileSet(object):
         max_chunk_mtime = 0
         for col, row, chunkx, chunky, chunkz, chunk_mtime in chunks:
             xpos = -192 + (col-colstart)*192
-            ypos = -96 + (row-rowstart)*96 + (88-1 - chunky)*192
+            ypos = -96 + (row-rowstart)*96 + (SECTIONS_PER_CHUNK-1 - chunky)*192
 
             if chunk_mtime > max_chunk_mtime:
                 max_chunk_mtime = chunk_mtime
@@ -1188,9 +1191,9 @@ def get_tiles_by_chunk(chunkcol, chunkrow):
     # tile above it as well. Also touches the next 4 tiles down (16
     # rows)
     if chunkrow % 4 == 0:
-        rowrange = xrange(tilerow-4, tilerow+32+1, 4)
+        rowrange = xrange(tilerow-4, tilerow+(SECTIONS_PER_CHUNK*2)+1, 4)
     else:
-        rowrange = xrange(tilerow, tilerow+32+1, 4)
+        rowrange = xrange(tilerow, tilerow+(SECTIONS_PER_CHUNK*2)+1, 4)
 
     return product(colrange, rowrange)
 
@@ -1219,12 +1222,12 @@ def get_chunks_by_tile(tile, regionset):
     # First do the odd. For each chunk in the tile's odd column the tile
     # "passes through" three chunk sections.
     oddcol_sections = []
-    for i, y in enumerate(reversed(xrange(88))):
+    for i, y in enumerate(reversed(xrange(SECTIONS_PER_CHUNK))):
         for row in xrange(tile.row + 3 - i*2, tile.row - 2 - i*2, -2):
             oddcol_sections.append((tile.col+1, row, y))
 
     evencol_sections = []
-    for i, y in enumerate(reversed(xrange(88))):
+    for i, y in enumerate(reversed(xrange(SECTIONS_PER_CHUNK))):
         for row in xrange(tile.row + 4 - i*2, tile.row - 3 - i*2, -2):
             evencol_sections.append((tile.col+2, row, y))
             evencol_sections.append((tile.col, row, y))
