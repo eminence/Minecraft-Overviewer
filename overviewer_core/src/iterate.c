@@ -260,20 +260,20 @@ generate_pseudo_data(RenderState *state, unsigned char ancilData) {
         return ancilData;
     } else if (state->block == 9) { /* water */
         /* an aditional bit for top is added to the 4 bits of check_adjacent_blocks */
-        if (ancilData == 0) { /* static water */
-            if (get_data(state, BLOCKS, x, y+1, z) == 9) {
-                data = 0;
-            } else { 
-                data = 16;
-            }
-            return data; /* = 0b10000 */
-        } else if ((ancilData > 0) && (ancilData < 8)) { /* flowing water */
-            data = (check_adjacent_blocks(state, x, y, z, state->block) ^ 0x0f) | 0x10;
-            return data;
-        } else if (ancilData >= 8) { /* falling water */
-            data = (check_adjacent_blocks(state, x, y, z, state->block) ^ 0x0f);
-            return data;
-        }
+		/* set the top bit first */
+		if (get_data(state, BLOCKS, x, y+1, z) == 9) {
+			data = 0;
+		} else { 
+			data = 16;
+		}
+		
+		if (ancilData == 0) { /* static water, usually in oceans */
+			return data;
+		}
+		
+		/* the rest is flowing/falling water, we need to check neighbors */
+		data |= check_adjacent_blocks(state, x, y, z, state->block) ^ 0x0f;
+		return data;
     } else if ((state->block == 20) || (state->block == 79)) { /* glass and ice */
         /* an aditional bit for top is added to the 4 bits of check_adjacent_blocks */
         if (get_data(state, BLOCKS, x, y+1, z) == 20) {
