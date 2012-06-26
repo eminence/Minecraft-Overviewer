@@ -74,7 +74,7 @@ PyObject *draw_triangle(PyObject *dest, int inclusive,
 typedef struct _RenderMode RenderMode;
 
 /* in iterate.c */
-#define SECTIONS_PER_CHUNK 52
+#define SECTIONS_PER_CHUNK 88
 typedef struct {
     /* whether this chunk is loaded: use load_chunk to load */
     int loaded;

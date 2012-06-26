@@ -37,7 +37,7 @@ import rendermodes
 import c_overviewer
 
 # used everywhere, mostly to keep track of where it's used for now
-SECTIONS_PER_CHUNK = 52
+SECTIONS_PER_CHUNK = 88
 
 """
 
