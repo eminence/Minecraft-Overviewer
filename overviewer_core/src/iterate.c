@@ -267,11 +267,7 @@ generate_pseudo_data(RenderState *state, unsigned char ancilData) {
 			data = 16;
 		}
 		
-		if (ancilData == 0) { /* static water, usually in oceans */
-			return data;
-		}
-		
-		/* the rest is flowing/falling water, we need to check neighbors */
+		/* we need to check neighbors */
 		data |= check_adjacent_blocks(state, x, y, z, state->block) ^ 0x0f;
 		return data;
     } else if ((state->block == 20) || (state->block == 79)) { /* glass and ice */
