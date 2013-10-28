@@ -87,6 +87,14 @@ A more complicated example
         "dimension": "nether",
     }
 
+    renders["survivalnethersouth"] = {
+        "world": "survival",
+        "title": "Survival Nether",
+        "rendermode": nether_smooth_lighting,
+        "dimension": "nether",
+        "northdirection" : "lower-right",
+    }
+
     renders["creative"] = {
         "world": "creative",
         "title": "Creative",
@@ -111,9 +119,10 @@ there are many preset rendermodes, and you can even create your own (more on
 that later).
 
 And finally, note the usage of the ``texturepath`` option. This specifies a
-texture pack to use for the rendering. Also note that it is set at the top level
-of the config file, and therefore applies to every render. It could be set on
-individual renders to apply to just those renders.
+texture pack (also called a resource pack) to use for the rendering. Also note
+that it is set at the top level of the config file, and therefore applies to
+every render. It could be set on individual renders to apply to just those
+renders.
 
 .. note::
 
@@ -356,7 +365,7 @@ values. The valid configuration keys are listed below.
 
     Then you don't need to specify a ``world`` key in the render dictionaries::
 
-        render['arender'] = {
+        renders['arender'] = {
                 'title': 'This render doesn't explicitly declare a world!',
                 }
 
@@ -459,7 +468,7 @@ values. The valid configuration keys are listed below.
         objects.  See :ref:`customrendermodes` for more information.
 
 ``northdirection``
-    This is direction that north will be rendered. This north direction will
+    This is direction or viewpoint angle with which north will be rendered. This north direction will
     match the established north direction in the game where the sun rises in the
     east and sets in the west.
 
@@ -547,11 +556,14 @@ values. The valid configuration keys are listed below.
 .. _option_texturepath:
 
 ``texturepath``
-    This is a where a specific texture pack can be found to be used during this render.
-    It can be either a folder or a zip file containing the texture pack.  If specifying
-    a folder, this option should point to a directory that *contains* the textures/ folder
-    (it should not point to the textures folder directly).
-    Its value should be a string.
+    This is a where a specific texture or resource pack can be found to use
+    during this render. It can be a path to either a folder or a zip/jar file
+    containing the texture resources. If specifying a folder, this option should
+    point to a directory that *contains* the assets/ directory (it should not
+    point to the assets directory directly or any one particular texture image).
+
+    Its value should be a string: the path on the filesystem to the resource
+    pack.
 
 .. _crop:
 
@@ -916,7 +928,7 @@ primitive object's constructor::
 
 Then you can use your new rendermode in your render definitions::
 
-    render["survivalday"] = {
+    renders["survivalday"] = {
         "world": "survival",
         "title": "Survival Daytime",
         "rendermode": my_rendermode,

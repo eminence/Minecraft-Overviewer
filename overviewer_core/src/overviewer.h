@@ -26,7 +26,7 @@
 
 // increment this value if you've made a change to the c extesion
 // and want to force users to rebuild
-#define OVERVIEWER_EXTENSION_VERSION 42
+#define OVERVIEWER_EXTENSION_VERSION 45
 
 /* Python PIL, and numpy headers */
 #include <Python.h>
@@ -108,7 +108,7 @@ typedef struct {
     int x, y, z;
     unsigned short block;
     unsigned char block_data;
-    unsigned char block_pdata;
+    unsigned short block_pdata;
 
     /* useful information about this, and neighboring, chunks */
     PyObject *blockdatas;
@@ -147,6 +147,7 @@ block_has_property(unsigned short b, BlockProperty prop) {
     return block_properties[b] & (1 << prop);
 }
 #define is_transparent(b) block_has_property((b), TRANSPARENT)
+#define is_known_transparent(b) block_has_property((b), TRANSPARENT) && block_has_property((b), KNOWN)
 
 /* helper for indexing section data possibly across section boundaries */
 typedef enum
