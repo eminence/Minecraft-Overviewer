@@ -219,13 +219,29 @@ is typically correct.
     specify ``-v -q`` to get only INFO logs and higher (no DEBUG) but with the
     more verbose logging format.
 
+.. cmdoption:: --update-web-assets
+
+    Update web assets, including custom assets, without starting a render.
+    This won't update overviewerConfig.js, but will recreate overviewer.js
+
 .. _installing-textures:
 
 Installing the Textures
 =======================
 
+.. note::
+    This procedure has changed with Minecraft 1.6's Resource Pack update. The
+    latest versions of Overviewer are not compatible with Minecraft 1.5 client
+    resources.
+
 If Overviewer is running on a machine with the Minecraft client installed, it
 will automatically use the default textures from Minecraft.
+    
+.. note::
+    Overviewer will only search for installed client *release* versions, not
+    snapshots. If you want to use a snapshot client jar for the textures,
+    you must specify it manually with the :ref:`texturepath<option_texturepath>`
+    option.
 
 If, however, you're running on a machine without the Minecraft client installed,
 or if you want to use different textures, you will need to provide the textures
@@ -233,19 +249,38 @@ manually. This is common for servers.
 
 If you want or need to provide your own textures, you have several options:
 
-* If you're running the Overviewer on a server, you can still put the
-  minecraft.jar file (not the launcher) into the correct location and the
-  Overviewer will find and use it, thinking the client is installed, even if the
-  rest of the client files are missing. On Linux, try a command like this::
+* The easy solution is to download the latest client jar to the location the
+  launcher would normally install it. Overviewer will find it and use it.
 
-      wget -N http://s3.amazonaws.com/MinecraftDownload/minecraft.jar -P ~/.minecraft/bin/
+  You can use the following commands to download the client jar on Linux or Mac.
+  Run the first line in a terminal, changing the version string to the latest as appropriate
+  (these docs may not always be updated to reflect the latest). Then paste the second line
+  into your terminal to download the latest version. ``${VERSION}`` will be replaced
+  by the acutal version string from the first line.
 
-* You can manually extract the terrain.png from minecraft.jar or your favorite
-  texture pack. If you've built the Overviewer from source or are using the
-  windows exe, place the file in the same directory as overviewer.py or
-  overviewer.exe.
+  ::
 
-* Specify any terrain.png or texture pack you want with the
+    VERSION=1.6.2
+    wget https://s3.amazonaws.com/Minecraft.Download/versions/${VERSION}/${VERSION}.jar -P ~/.minecraft/versions/${VERSION}/
+    
+  If that's too confusing for you, then just take this single line and paste it into
+  a terminal to get 1.6.2 textures::
+  
+    wget https://s3.amazonaws.com/Minecraft.Download/versions/1.6.2/1.6.2.jar -P ~/.minecraft/versions/1.6.2/
+
+* You can also just run the launcher to install the client.
+  
+* You can transfer the client jar to the correct place manually, from a computer
+  that does have the client, to your server. The correct places are:
+  
+  * For Linux: ``~/.minecraft/versions/<version>/<version>.jar``
+
+  * For Mac: ``~/Library/Application Support/minecraft/versions/<version>/<version>.jar``
+    
+  * For Windows: ``%APPDATA%/.minecraft/versions/<version>/<version>.jar``
+
+* You can download and use a custom resource pack. Download the resource pack
+  file and specify the path to it with the
   :ref:`texturepath<option_texturepath>` option.
 
 If you copy your world before you render it
@@ -260,3 +295,15 @@ modification times intact, use ``cp -p``. For people who render from backups,
 GNU ``tar`` automatically handles modification times correctly. ``rsync -a
 --delete`` will handle this correctly as well. If you use some other tool,
 you'll have to figure out how to do this yourself.
+
+HTTPS support
+-------------
+
+In order to support displaying maps over HTTPS, Overviewer loads the Google
+maps API and JQuery over HTTPS. This avoids security warnings for HTTPS
+sites, and is not expected to cause problems for users.
+
+If this change causes problems, take a look at the
+:ref:`custom web assets<customwebassets>` option. This allows you to
+provide a custom index.html which loads the required Javascript libraries
+over HTTP.

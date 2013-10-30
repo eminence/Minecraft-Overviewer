@@ -47,6 +47,13 @@ A more complicated filter function can construct a more customized display text:
         if poi['id'] == "Chest":
             return "Chest with %d items" % len(poi['Items'])
 
+It is also possible to return a tuple from the filter function to specify a hovertext
+different from the text displayed in the info window. The first entry of the tuple will
+be used as the hover text, the second will be used as the info window content::
+
+    def chestFilter(poi):
+        if poi['id'] == "Chest":
+            return ("Chest", "Chest with %d items" % len(poi['Items']))
 
 Since writing these filters can be a little tedious, a set of predefined filters
 functions are provided.  See the :ref:`predefined_filter_functions` section for
@@ -79,7 +86,75 @@ Here's an example that displays icons for each player::
             poi['icon'] = "http://overviewer.org/avatar/%s" % poi['EntityId']
             return "Last known location for %s" % poi['EntityId']
 
-Note how each POI can get a different icon by setting ``poi['icon']``
+Note how each POI can get a different icon by setting ``poi['icon']``. These icons must exist in either
+the output folder, or in your custom web assets folder. If the icon file does not exist in the correct 
+location, your markers will be shown without an icon - making them invisible!
+
+Manual POIs
+-----------
+
+It is also possible to manually define markers. Each render can have a render dictionary key
+called ``manualpois``, which is a list of dicts. Each dict represents a marker, and is required
+to have at least the attributes ``x``, ``y``, ``z`` and ``id``, with the coordinates being Minecraft
+world coordinates. (i.e. what you see in-game when you press F3)
+
+An example which adds two POIs with the id "town", and then uses a filter function to filter for them::
+
+    def townFilter(poi):
+        if poi['id'] == 'Town':
+            return poi['name']
+
+            
+    renders['myrender'] = {
+        'world':'myworld',
+        'title':'Example',
+        'manualpois':[
+                       {'id':'Town',
+                        'x':200,
+                        'y':64,
+                        'z':200,
+                        'name':'Foo'},
+                       {'id':'Town',
+                        'x':-300,
+                        'y':85,
+                        'z':-234,
+                        'name':'Bar'}],
+        'markers': [dict(name="Towns", filterFunction=townFilter)],
+    }
+
+Here is a more complex example where not every marker of a certain id has a certain key::
+
+    def townFilter(poi):
+        if poi['id'] == 'Town':
+            try:
+                return (poi['name'], poi['description'])
+            except KeyError:
+                return poi['name'] + '\n'
+
+            
+    renders['myrender'] = {
+        'world':'myworld',
+        'title':'Example',
+        'manualpois':[
+                       {'id':'Town',
+                        'x':200,
+                        'y':64,
+                        'z':200,
+                        'name':'Foo',
+                        'description':'Best place to eat hamburgers'},
+                       {'id':'Town',
+                        'x':-300,
+                        'y':85,
+                        'z':-234,
+                        'name':'Bar'}],
+        'markers': [dict(name="Towns", filterFunction=townFilter, icon="icons/marker_town.png")],
+        ### Note: The 'icon' parameter allows you to specify a custom icon, as per
+        ###       standard markers. This icon must exist in the same folder as your
+        ###       custom webassets or in the same folder as the generated index.html
+        ###       in this case, we use the marker_town.png icon which comes with
+        ###       the Overviewer by default, located in a subdirectory of web_assets.
+    }
+    
 
 Render Dictionary Key
 ---------------------
@@ -115,6 +190,9 @@ The following keys are accepted in the marker dictionary:
 ``createInfoWindow``
     Optional. Specifies whether or not the icon displays an info window on click. Defaults to True
 
+``checked``
+    Optional.  Specifies whether or not this marker group will be checked(visible) by default when
+    the map loads.  Defaults to False
 
 Generating the POI Markers
 ==========================
@@ -159,3 +237,12 @@ Predefined Filter Functions
 
 TODO write some filter functions, then document them here
 
+Marker Icons Overviewer ships by default
+========================================
+
+Overviewer comes with multiple small icons that you can use for your markers.
+You can find them in the ``overviewer_core/data/web_assets/icons`` directory.
+
+If you want to make your own in the same style, you can use the provided
+``marker_base_plain.svg`` and ``marker_base_plain_red.svg`` as template, with
+a vector editing software such as `Inkscape <http://inkscape.org>`_.
